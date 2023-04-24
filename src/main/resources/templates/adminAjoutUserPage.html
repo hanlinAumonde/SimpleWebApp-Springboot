@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Users</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" th:href="@{/css/adminAjoutUserPage.css}"/>
+    <link rel="script" th:href="@{/js/setBooleanValue.js}"/>
+    <link rel="script" th:href="@{/js/validateForm.js}"/>
+</head>
+<body>
+<header class="text-white py-3">
+    <div class="container">
+        <h1 class="mb-0">SR03 Chat Application - Interface Admin</h1>
+    </div>
+</header>
+<nav class="navbar navbar-expand-lg" style="background-color: #343a40;">
+    <div class="container">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/admin/adminAcceuil}">Acceuil</a>
+            </li>
+            <li class="nav-item ml-3">
+                <a class="nav-link" th:href="@{/admin/adminAjoutUser}">ADD a new User</a>
+            </li>
+            <li class="nav-item ml-3">
+                <a class="nav-link" th:href="@{/admin/adminUserActivation}">Active a User</a>
+            </li>
+            <li class="nav-item ml-3">
+                <a class="nav-link" th:href="@{/admin/adminSuppressionUser}">Delete a User</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+<br/>
+<div class="content">
+    <div class="row">
+        <main class="col-lg-9 col-md-9 col-sm-8">
+            <h3>Ajouter un utilisateur : </h3>
+            <form onsubmit="return validateForm()" th:action="@{/admin/adminAjoutUser}" th:object="${user}" method="POST">
+                <div class="form-group">
+                    <label for="lastName">Nom : </label>
+                    <input type="text" th:field="*{lastName}" class="form-control" id="lastName" required/>
+                </div>
+                <div class="form-group">
+                    <label for="firstName">Prenom : </label>
+                    <input type="text" th:field="*{firstName}" class="form-control" id="firstName" required/>
+                </div>
+                <div class="form-group">
+                    <label for="mail">Mail : </label>
+                    <input type="text" th:field="*{mail}" class="form-control" id="mail" required/>
+                </div>
+                <div class="form-group">
+                    <label for="password">Mot de passe : </label>
+                    <input type="text" th:field="*{password}" class="form-control" id="password" required/>
+                </div>
+                <div class="form-group">
+                    <label for="password">Role : </label>
+                    <select onchange="setBooleanValue(this.value)" th:field="*{admin}" class="form-control" id="role" required>
+                        <option value="false">USER</option>
+                        <option value="true">ADMIN</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                <p th:if="${error != null}" th:text="${error}" style="color: red;"></p>
+                <p th:if="${success != null}" th:text="${success}" style="color: limegreen;"></p>
+            </form>
+        </main>
+        <div class="col-lg-3 col-md-3 col-sm-4">
+            <aside>
+                <h5>Account admin : </h5>
+                <ul>
+                    <li th:text="${admin.getFirstName()}"></li>
+                    <li th:text="${admin.getLastName()}">Prenom: </li>
+                    <li th:text="${admin.getMail()}">Email: </li>
+                </ul>
+                <form th:action="@{/logout}" method="GET">
+                    <button class="btn btn-primary" type="submit">Logout</button>
+                </form>
+                </aside>
+        </div>
+    </div>
+</div>
+<footer class="bg-dark text-white py-4 mt-5">
+    <div class="d-flex justify-content-center">
+        <div>
+            <p class="mb-0">SR03 application de chat 2023</p>
+            <p>Hanlin_WU et Wassim_Gharbi</p>
+        </div>
+    </div>
+</footer>
+</body>
+</html>
