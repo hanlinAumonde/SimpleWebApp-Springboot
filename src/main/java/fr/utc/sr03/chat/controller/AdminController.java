@@ -15,7 +15,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
 @Controller
-@RequestMapping("/admin")
+@RequestMapping
 public class AdminController {
     @Autowired
     private UserRepository userRepository;
@@ -26,7 +26,7 @@ public class AdminController {
     @Autowired
     private UserChatroomRelationRepository userChatroomRelationRepository;
 
-    @GetMapping("/adminAccueil")
+    @GetMapping("/admin/adminAccueil")
     public String getAdminAccueil(Model adminPage, @AuthenticationPrincipal User admin) {
         List<User> users = userRepository.findAll();
         adminPage.addAttribute("admin",admin);
@@ -34,7 +34,7 @@ public class AdminController {
         return "adminPage";
     }
 
-    @GetMapping("/adminAjoutUser")
+    @GetMapping("/admin/adminAjoutUser")
     public String getAddUserForm(Model model, @ModelAttribute(value = "msg")String msg , @AuthenticationPrincipal User admin) {
         model.addAttribute("admin",admin);
         model.addAttribute("user", new User());
@@ -46,23 +46,23 @@ public class AdminController {
         return "adminAjoutUserPage";
     }
 
-    @PostMapping("/adminAjoutUser")
+    @PostMapping("/admin/adminAjoutUser")
     public String addUser(@ModelAttribute User user, RedirectAttributes redirectAttributes) {
 
         List<User> allUsers = userRepository.findAll();
         for(User u : allUsers){
             if(u.equals(user)){
                 redirectAttributes.addFlashAttribute("msg", "User already exists");
-                return "redirect:/adminAjoutUser";
+                return "redirect:/admin/adminAjoutUser";
             }
         }
 
         userRepository.save(user);
         redirectAttributes.addFlashAttribute("msg", "User added");
-        return "redirect:/adminAjoutUser";
+        return "redirect:/admin/adminAjoutUser";
     }
 
-    @GetMapping("/adminSuppressionUser")
+    @GetMapping("/admin/adminSuppressionUser")
     public String getDeleteUserForm(Model model, @AuthenticationPrincipal User admin) {
         model.addAttribute("admin",admin);
         List<User> users = userRepository.findByAdmin(false);
@@ -70,7 +70,7 @@ public class AdminController {
         return "adminSuppressionUserPage";
     }
 
-    @DeleteMapping("/adminSuppressionUser")
+    @DeleteMapping("/admin/adminSuppressionUser")
     public String deleteUser(@RequestParam("userId") long userId) {
         User user = userRepository.findById(userId).get();
         userRepository.delete(user);
@@ -83,10 +83,10 @@ public class AdminController {
             userChatroomRelationRepository.delete(relation);
         }
 
-        return "redirect:/adminSuppressionUser";
+        return "redirect:/admin/adminSuppressionUser";
     }
 
-    @GetMapping("/adminUserActivation")
+    @GetMapping("/admin/adminUserActivation")
     public String getActivationUserForm(Model model, @AuthenticationPrincipal User admin) {
         model.addAttribute("admin",admin);
         List<User> usersDesactive = userRepository.findByActive(false);
@@ -94,7 +94,7 @@ public class AdminController {
         return "adminUserActivationPage";
     }
 
-    @PutMapping("/adminUserActivation")
+    @PutMapping("/admin/adminUserActivation")
     public String activateUser(@RequestParam("userId") long userId) {
         User user = userRepository.findById(userId).get();
         user.setActive(true);
@@ -110,7 +110,7 @@ public class AdminController {
             });
         }
          */
-        return "redirect:/adminUserActivation";
+        return "redirect:/admin/adminUserActivation";
     }
 }
 

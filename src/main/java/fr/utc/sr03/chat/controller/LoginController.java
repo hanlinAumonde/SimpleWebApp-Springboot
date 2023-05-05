@@ -39,6 +39,7 @@ public class LoginController {
     public String getAcceuil(Model Page, @AuthenticationPrincipal User user){
         if(user.isAdmin()){
             System.out.println("login du admin");
+            System.out.println("user's authorities : " + user.getAuthorities());
             return "redirect:/admin/adminAccueil";
         }else{
             System.out.println("login du user");

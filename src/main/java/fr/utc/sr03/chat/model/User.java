@@ -34,7 +34,7 @@ public class User implements UserDetails {
     @Column(name = "is_active")
     private boolean active = true;
 
-    @Column(name = "failedAttempts")
+    @Column(name = "failed_attempts")
     private int failedAttempts = 0;
 
     public User(){}
@@ -111,7 +111,7 @@ public class User implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = new ArrayList<>();
-        String role = admin ? "ADMIN" : "USER";
+        String role = admin ? "ROLE_ADMIN" : "ROLE_USER";
         authorities.add(new SimpleGrantedAuthority(role));
         return authorities;
     }

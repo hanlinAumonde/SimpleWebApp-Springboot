@@ -29,8 +29,11 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+        System.out.println("Commence l'authentification");
         String userEmail = authentication.getName();
         String password = authentication.getCredentials().toString();
+        System.out.println("userEmail : " + userEmail);
+        System.out.println("password : " + password);
 
         Optional<User> admin = userRepository.findByMailAndAdmin(userEmail, true);
         Optional<User> user = userRepository.findByMailAndAdmin(userEmail, false);
@@ -53,15 +56,15 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
         if (account.get().getPassword().equals(password)) {
             account.get().setFailedAttempts(0);
             userRepository.save(account.get());
-            return new UsernamePasswordAuthenticationToken(userEmail, password, AUTHORITIES);
+            return new UsernamePasswordAuthenticationToken(account.get(), password, AUTHORITIES);
         } else {
             account.get().setFailedAttempts(account.get().getFailedAttempts() + 1);
 
             if (account.get().getFailedAttempts() >= MAX_FAILED_ATTEMPTS) {
                 account.get().setActive(false);
-                /**
-                 * change the status of all chatrooms that owned by user to inactive
-                 *
+                /*
+                  change the status of all chatrooms that owned by user to inactive
+
                 if(!account.get().isAdmin()){
                     userChatroomRelationRepository.findByUserId(account.get().getId()).forEach(userChatroomRelation -> {
                         chatRoomRepository.findById(userChatroomRelation.getChatRoomId()).ifPresent(chatRoom -> {

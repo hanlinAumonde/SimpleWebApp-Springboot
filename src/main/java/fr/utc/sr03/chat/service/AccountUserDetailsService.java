@@ -1,4 +1,4 @@
-package fr.utc.sr03.chat.security;
+package fr.utc.sr03.chat.service;
 
 import fr.utc.sr03.chat.dao.UserRepository;
 import fr.utc.sr03.chat.model.User;
