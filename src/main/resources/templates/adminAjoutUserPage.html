@@ -39,35 +39,41 @@
 <div class="content">
     <div class="row">
         <main class="col-lg-9 col-md-9 col-sm-8">
-            <h3>Ajouter un utilisateur : </h3>
-            <form onsubmit="return validateForm()" th:action="@{/admin/adminAjoutUser}" th:object="${user}" method="POST">
-                <div class="form-group">
-                    <label for="lastName">Nom : </label>
-                    <input type="text" th:field="*{lastName}" class="form-control" id="lastName" required/>
+            <div class="row mb-4 ms-2 me-2">
+                <div class="col">
+                    <h2>Ajouter un utilisateur : </h2>
                 </div>
-                <div class="form-group">
-                    <label for="firstName">Prenom : </label>
-                    <input type="text" th:field="*{firstName}" class="form-control" id="firstName" required/>
-                </div>
-                <div class="form-group">
-                    <label for="mail">Mail : </label>
-                    <input type="text" th:field="*{mail}" class="form-control" id="mail" required/>
-                </div>
-                <div class="form-group">
-                    <label for="password">Mot de passe : </label>
-                    <input type="text" th:field="*{pwd}" class="form-control" id="password" required/>
-                </div>
-                <div class="form-group">
-                    <label for="password">Role : </label>
-                    <select onchange="setBooleanValue(this.value)" th:field="*{admin}" class="form-control" id="role" required>
-                        <option value="false">USER</option>
-                        <option value="true">ADMIN</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary">Enregistrer</button>
-                <p th:if="${error != null}" th:text="${error}" style="color: red;"></p>
-                <p th:if="${success != null}" th:text="${success}" style="color: limegreen;"></p>
-            </form>
+            </div>
+            <div class="row ms-4 me-4">
+                <form class="addUserForm" onsubmit="return validateForm()" th:action="@{/admin/adminAjoutUser}" th:object="${user}" method="POST">
+                    <div class="form-group">
+                        <label for="lastName">Nom : </label>
+                        <input type="text" th:field="*{lastName}" class="form-control" id="lastName" required/>
+                    </div>
+                    <div class="form-group">
+                        <label for="firstName">Prenom : </label>
+                        <input type="text" th:field="*{firstName}" class="form-control" id="firstName" required/>
+                    </div>
+                    <div class="form-group">
+                        <label for="mail">Mail : </label>
+                        <input type="text" th:field="*{mail}" class="form-control" id="mail" required/>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Mot de passe : </label>
+                        <input type="text" th:field="*{pwd}" class="form-control" id="password" required/>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Role : </label>
+                        <select onchange="setBooleanValue(this.value)" th:field="*{admin}" class="form-control" id="role" required>
+                            <option value="false">USER</option>
+                            <option value="true">ADMIN</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    <p th:if="${error != null}" th:text="${error}" style="color: red;"></p>
+                    <p th:if="${success != null}" th:text="${success}" style="color: limegreen;"></p>
+                </form>
+            </div>
         </main>
         <div class="col-lg-3 col-md-3 col-sm-4">
             <aside>
@@ -77,7 +83,7 @@
                     <li th:text="${admin.getLastName()}">Prenom: </li>
                     <li th:text="${admin.getMail()}">Email: </li>
                 </ul>
-                <form th:action="@{/logout}" method="GET">
+                <form th:action="@{/logout}" method="POST">
                     <button class="btn btn-primary" type="submit">Logout</button>
                 </form>
                 </aside>

@@ -3,6 +3,7 @@ package fr.utc.sr03.chat.config;
 import fr.utc.sr03.chat.security.AccountAuthenticationFailureHandler;
 import fr.utc.sr03.chat.security.AccountAuthenticationProvider;
 import fr.utc.sr03.chat.security.AccountAuthenticationSuccessHandler;
+import fr.utc.sr03.chat.security.AccountLogoutSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +12,8 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -34,7 +37,7 @@ public class WebSecurityConfig {
         http
                 .authorizeRequests()
                     .antMatchers("/login").permitAll()
-                    //.antMatchers("/logout").permitAll()
+                    .antMatchers("/logout").permitAll()
                     .antMatchers("/admin/**").hasRole("ADMIN")
                     .antMatchers("/user/**").hasRole("USER")
                     .anyRequest().authenticated()
@@ -47,15 +50,20 @@ public class WebSecurityConfig {
                     .permitAll()
                 .and()
                 .logout()
-                    .logoutUrl("/logout?")
+                    .logoutUrl("/logout")
                     .invalidateHttpSession(true)
                     .clearAuthentication(true)
-                    .logoutSuccessUrl("/login")
+                    .logoutSuccessHandler(new AccountLogoutSuccessHandler())
                     .permitAll()
                 .and();
 
 
         return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     @Bean

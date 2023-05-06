@@ -7,7 +7,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "chatrooms")
-public class ChatRoom {
+public class Chatroom {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY) // strategy=GenerationType.IDENTITY => obligatoire pour auto increment mysql
     private long id;
@@ -31,7 +31,7 @@ public class ChatRoom {
     @Column(name = "is_active")
     private boolean active;
 
-    public ChatRoom(){}
+    public Chatroom(){}
 
     public long getId() {
         return id;

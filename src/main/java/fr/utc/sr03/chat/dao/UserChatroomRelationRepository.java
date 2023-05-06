@@ -1,6 +1,5 @@
 package fr.utc.sr03.chat.dao;
 
-import fr.utc.sr03.chat.model.ChatRoom;
 import fr.utc.sr03.chat.model.UserChatroomRelation;
 import org.springframework.data.jpa.repository.JpaRepository;
 

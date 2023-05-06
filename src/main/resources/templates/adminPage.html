@@ -50,7 +50,7 @@
                     <th scope="col">UserLastName</th>
                     <th scope="col">Mail</th>
                     <th scope="col">Admin</th>
-                    <th scope="col">Status</th>
+                    <th scope="col">isActive</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -73,7 +73,7 @@
                 <li th:text="${admin.getLastName()}">Prenom: </li>
                 <li th:text="${admin.getMail()}">Email: </li>
                 </ul>
-                <form th:action="@{/logout}" method="GET">
+                <form th:action="@{/logout}" method="POST">
                     <button class="btn btn-primary" type="submit">Logout</button>
                 </form>
                 </aside>

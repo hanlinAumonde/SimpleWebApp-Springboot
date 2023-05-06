@@ -1,18 +1,23 @@
 package fr.utc.sr03.chat.controller;
 
-import fr.utc.sr03.chat.dao.ChatRoomRepository;
-import fr.utc.sr03.chat.dao.UserChatroomRelationRepository;
-import fr.utc.sr03.chat.dao.UserRepository;
-import fr.utc.sr03.chat.model.ChatRoom;
+import fr.utc.sr03.chat.model.Chatroom;
 import fr.utc.sr03.chat.model.User;
 import fr.utc.sr03.chat.model.UserChatroomRelation;
-import org.springframework.beans.factory.annotation.Autowired;
+import fr.utc.sr03.chat.service.implementations.ChatroomService;
+import fr.utc.sr03.chat.service.implementations.UserChatroomRelationService;
+import fr.utc.sr03.chat.service.implementations.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -20,51 +25,60 @@ import java.util.List;
 @Controller
 @RequestMapping
 public class LoginController {
-    @Autowired
-    private UserRepository userRepository;
+    private final Logger logger = LoggerFactory.getLogger(LoginController.class);
+    @Resource
+    private UserService userService;
 
-    @Autowired
-    private ChatRoomRepository chatRoomRepository;
+    @Resource
+    private ChatroomService chatroomService;
 
-    @Autowired
-    private UserChatroomRelationRepository userChatroomRelationRepository;
+    @Resource
+    private UserChatroomRelationService userChatroomRelationService;
 
     @GetMapping("/login")
-    public String getLogin(Model model) {
+    public String getLogin(Model model, @RequestParam(value = "error", required = false) String error, HttpServletRequest request) {
         model.addAttribute("user", new User());
+        HttpSession session = request.getSession();
+        String errorMsg = (String) session.getAttribute("error");
+
+        if(errorMsg != null) {
+            model.addAttribute("error", errorMsg);
+            session.removeAttribute("error");
+        }
         return "loginPage";
     }
 
     @GetMapping("/accueil")
     public String getAcceuil(Model Page, @AuthenticationPrincipal User user){
         if(user.isAdmin()){
-            System.out.println("login du admin");
-            System.out.println("user's authorities : " + user.getAuthorities());
+            logger.info("login du admin");
+            logger.info("user's authorities : " + user.getAuthorities());
             return "redirect:/admin/adminAccueil";
         }else{
-            System.out.println("login du user");
+            logger.info("login du user");
+            logger.info("user's authorities : " + user.getAuthorities());
             long userId = user.getId();
-            List<ChatRoom> ChatroomsOwned = new ArrayList<>();
-            List<ChatRoom> ChatroomsInvited = new ArrayList<>();
+            List<Chatroom> ChatroomsOwned = new ArrayList<>();
+            List<Chatroom> ChatroomsInvited = new ArrayList<>();
 
-            List<UserChatroomRelation> ChatroomsOwnedByUser = userChatroomRelationRepository.findByUserIdAndOwned(userId,true);
+            List<UserChatroomRelation> ChatroomsOwnedByUser = userChatroomRelationService.findChatroomsOwnedOrInviting(userId,true);
             for(UserChatroomRelation owned : ChatroomsOwnedByUser){
-                ChatRoom ChatroomTemp = chatRoomRepository.findById(owned.getChatRoomId()).get();
+                Chatroom ChatroomTemp = chatroomService.findChatroom(owned.getChatroomId()).get();
                 Date currentDate = new Date();
                 if(ChatroomTemp.getHoraireTermine().getTime() > currentDate.getTime()){
                     ChatroomsOwned.add(ChatroomTemp);
                 }
             }
-            List<UserChatroomRelation> ChatroomsInviteUser = userChatroomRelationRepository.findByUserIdAndOwned(userId,false);
+            List<UserChatroomRelation> ChatroomsInviteUser = userChatroomRelationService.findChatroomsOwnedOrInviting(userId,false);
             for(UserChatroomRelation invited : ChatroomsInviteUser){
-                ChatRoom ChatroomTemp = chatRoomRepository.findById(invited.getChatRoomId()).get();
+                Chatroom ChatroomTemp = chatroomService.findChatroom(invited.getChatroomId()).get();
                 Date currentDate = new Date();
                 if(ChatroomTemp.getHoraireTermine().getTime() > currentDate.getTime()){
                     ChatroomsInvited.add(ChatroomTemp);
                 }
             }
 
-            Page.addAttribute("users",userRepository.findAll());
+            Page.addAttribute("users",userService.findAllUsers());
             Page.addAttribute("ChatroomsOwnedByUser",ChatroomsOwned);
             Page.addAttribute("ChatroomsInviteUser",ChatroomsInvited);
             return "userPage";

@@ -20,9 +20,7 @@ header {
     flex : 1 0 auto;
 }
 
-.container > .row > form {
-    height: 300px;
-    width: 400px;
+#addUserForm {
     border: 1px solid #ccc;
     padding: 20px;
     display: flex;
@@ -31,6 +29,8 @@ header {
     justify-content: center;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
+
 
 table > th,table > td{
     border: 1px solid black;

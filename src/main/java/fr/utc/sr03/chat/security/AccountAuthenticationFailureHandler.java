@@ -16,6 +16,7 @@ public class AccountAuthenticationFailureHandler implements AuthenticationFailur
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationException exception) throws IOException, ServletException {
         String error = exception.getMessage();
-        response.sendRedirect("/login?error=" + URLEncoder.encode(error, StandardCharsets.UTF_8));
+        request.getSession().setAttribute("error", error);
+        response.sendRedirect("/login");
     }
 }

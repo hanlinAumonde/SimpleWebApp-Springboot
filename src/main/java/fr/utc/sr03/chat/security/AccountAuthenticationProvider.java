@@ -1,45 +1,62 @@
 package fr.utc.sr03.chat.security;
 
-import fr.utc.sr03.chat.dao.ChatRoomRepository;
-import fr.utc.sr03.chat.dao.UserChatroomRelationRepository;
-import fr.utc.sr03.chat.dao.UserRepository;
 import fr.utc.sr03.chat.model.User;
+import fr.utc.sr03.chat.service.implementations.ChatroomService;
+import fr.utc.sr03.chat.service.implementations.UserChatroomRelationService;
+import fr.utc.sr03.chat.service.implementations.UserService;
+import fr.utc.sr03.chat.service.utils.WithoutPasswordEncorder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.Optional;
 
 @Component
 public class AccountAuthenticationProvider implements AuthenticationProvider {
+
+    private final Logger logger = LoggerFactory.getLogger(AccountAuthenticationProvider.class);
     private static final int MAX_FAILED_ATTEMPTS = 5;
     @Autowired
-    private UserRepository userRepository;
+    @Lazy
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private ChatRoomRepository chatRoomRepository;
+    private WithoutPasswordEncorder withoutPasswordEncorder;
 
-    @Autowired
-    private UserChatroomRelationRepository userChatroomRelationRepository;
+    @Resource
+    private UserService userService;
+
+    @Resource
+    private ChatroomService chatroomService;
+
+    @Resource
+    private UserChatroomRelationService userChatroomRelationService;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        System.out.println("Commence l'authentification");
+        logger.info("Commence l'authentification");
         String userEmail = authentication.getName();
         String password = authentication.getCredentials().toString();
-        System.out.println("userEmail : " + userEmail);
-        System.out.println("password : " + password);
+        logger.info("userEmail : " + userEmail);
+        logger.info("password : " + password);
 
-        Optional<User> admin = userRepository.findByMailAndAdmin(userEmail, true);
-        Optional<User> user = userRepository.findByMailAndAdmin(userEmail, false);
+        Optional<User> admin = userService.findUserOrAdmin(userEmail, true);
+        Optional<User> user = userService.findUserOrAdmin(userEmail, false);
         Optional<User> account;
 
         if (admin.isEmpty() && user.isEmpty()) {
+            logger.info("Account not found");
             throw new UsernameNotFoundException("Account not found");
         }else if(admin.isEmpty()) {
             account = user;
@@ -48,40 +65,35 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
         }
 
         if(!account.get().isActive()){
+            logger.info("Account is not active");
             throw new LockedException("Account is locked");
         }
 
         Collection<? extends GrantedAuthority> AUTHORITIES = account.get().getAuthorities();
-
-        if (account.get().getPassword().equals(password)) {
-            account.get().setFailedAttempts(0);
-            userRepository.save(account.get());
+        PasswordEncoder ActuelPasswordEncoder = account.get().isAdmin() ? withoutPasswordEncorder : passwordEncoder;
+        if (ActuelPasswordEncoder.matches(password, account.get().getPassword())) {
+            userService.setFailedAttemptsOfUser(account.get().getId(),0);
             return new UsernamePasswordAuthenticationToken(account.get(), password, AUTHORITIES);
         } else {
-            account.get().setFailedAttempts(account.get().getFailedAttempts() + 1);
-
-            if (account.get().getFailedAttempts() >= MAX_FAILED_ATTEMPTS) {
-                account.get().setActive(false);
+            int attempts = account.get().getFailedAttempts() + 1;
+            if (attempts >= MAX_FAILED_ATTEMPTS) {
+                userService.lockUserAndResetFailedAttempts(account.get().getId());
                 /*
                   change the status of all chatrooms that owned by user to inactive
-
+                */
                 if(!account.get().isAdmin()){
-                    userChatroomRelationRepository.findByUserId(account.get().getId()).forEach(userChatroomRelation -> {
-                        chatRoomRepository.findById(userChatroomRelation.getChatRoomId()).ifPresent(chatRoom -> {
-                            chatRoom.setActive(false);
-                            chatRoomRepository.save(chatRoom);
-                        });
-                    });
+                    userChatroomRelationService.findRelationsOfUser(account.get().getId())
+                            .forEach(userChatroomRelation ->
+                                    chatroomService.setStatusOfChatroom(userChatroomRelation.getChatroomId(),false));
                 }
-                 */
-                account.get().setFailedAttempts(0);
+                logger.info("Trops de tentatives malveillantes, votre compte est blouqé");
+                throw new BadCredentialsException("Trops de tentatives malveillantes, votre compte est blouqé");
             }
-
-            userRepository.save(account.get());
+            userService.setFailedAttemptsOfUser(account.get().getId(),attempts);
+            logger.info("Wrong Password. Account will be locked after " + (MAX_FAILED_ATTEMPTS - account.get().getFailedAttempts()) + " more attempts");
             throw new BadCredentialsException("Wrong Password. Account will be locked after " + (MAX_FAILED_ATTEMPTS - account.get().getFailedAttempts()) + " more attempts");
         }
     }
-
     @Override
     public boolean supports(Class<?> authentication) {
         return authentication.equals(UsernamePasswordAuthenticationToken.class);

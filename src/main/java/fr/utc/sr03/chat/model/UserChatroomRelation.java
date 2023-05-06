@@ -13,7 +13,7 @@ public class UserChatroomRelation {
     private long userId;
 
     @Column(name = "chatroom_id")
-    private long chatRoomId;
+    private long chatroomId;
 
     @Column(name = "chatroom_ownedby_user")
     private boolean owned;
@@ -28,12 +28,12 @@ public class UserChatroomRelation {
         this.userId = userId;
     }
 
-    public long getChatRoomId() {
-        return this.chatRoomId;
+    public long getChatroomId() {
+        return this.chatroomId;
     }
 
-    public void setChatRoomId(long chatRoomId) {
-        this.chatRoomId = chatRoomId;
+    public void setChatroomId(long chatRoomId) {
+        this.chatroomId = chatRoomId;
     }
 
     public boolean isOwned() {

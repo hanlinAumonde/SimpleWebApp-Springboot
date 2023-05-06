@@ -1,40 +1,41 @@
 package fr.utc.sr03.chat.controller;
 
-import fr.utc.sr03.chat.dao.ChatRoomRepository;
-import fr.utc.sr03.chat.dao.UserChatroomRelationRepository;
-import fr.utc.sr03.chat.dao.UserRepository;
+
 import fr.utc.sr03.chat.model.User;
 import fr.utc.sr03.chat.model.UserChatroomRelation;
-import org.springframework.beans.factory.annotation.Autowired;
+import fr.utc.sr03.chat.service.implementations.ChatroomService;
+import fr.utc.sr03.chat.service.implementations.UserChatroomRelationService;
+import fr.utc.sr03.chat.service.implementations.UserService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 @Controller
-@RequestMapping
+@RequestMapping(value="/admin")
 public class AdminController {
-    @Autowired
-    private UserRepository userRepository;
+    @Resource
+    private UserService userService;
 
-    @Autowired
-    private ChatRoomRepository chatRoomRepository;
+    @Resource
+    private ChatroomService chatroomService;
 
-    @Autowired
-    private UserChatroomRelationRepository userChatroomRelationRepository;
+    @Resource
+    private UserChatroomRelationService userChatroomRelationService;
 
-    @GetMapping("/admin/adminAccueil")
+    @GetMapping("/adminAccueil")
     public String getAdminAccueil(Model adminPage, @AuthenticationPrincipal User admin) {
-        List<User> users = userRepository.findAll();
+        List<User> users = userService.findAllUsers();
         adminPage.addAttribute("admin",admin);
         adminPage.addAttribute("users",users);
         return "adminPage";
     }
 
-    @GetMapping("/admin/adminAjoutUser")
+    @GetMapping("/adminAjoutUser")
     public String getAddUserForm(Model model, @ModelAttribute(value = "msg")String msg , @AuthenticationPrincipal User admin) {
         model.addAttribute("admin",admin);
         model.addAttribute("user", new User());
@@ -46,70 +47,57 @@ public class AdminController {
         return "adminAjoutUserPage";
     }
 
-    @PostMapping("/admin/adminAjoutUser")
-    public String addUser(@ModelAttribute User user, RedirectAttributes redirectAttributes) {
-
-        List<User> allUsers = userRepository.findAll();
-        for(User u : allUsers){
-            if(u.equals(user)){
-                redirectAttributes.addFlashAttribute("msg", "User already exists");
-                return "redirect:/admin/adminAjoutUser";
-            }
+    @PostMapping("/adminAjoutUser")
+    public String addUserToBD(@ModelAttribute User user, RedirectAttributes redirectAttributes) {
+        boolean userAdded = userService.addUser(user);
+        if (!userAdded){
+            redirectAttributes.addFlashAttribute("msg", "User already exists");
+        } else {
+            redirectAttributes.addFlashAttribute("msg","User added");
         }
-
-        userRepository.save(user);
-        redirectAttributes.addFlashAttribute("msg", "User added");
         return "redirect:/admin/adminAjoutUser";
     }
 
-    @GetMapping("/admin/adminSuppressionUser")
+    @GetMapping("/adminSuppressionUser")
     public String getDeleteUserForm(Model model, @AuthenticationPrincipal User admin) {
         model.addAttribute("admin",admin);
-        List<User> users = userRepository.findByAdmin(false);
+        List<User> users = userService.findAllUsersNotAdmin();
         model.addAttribute("users",users);
         return "adminSuppressionUserPage";
     }
 
-    @DeleteMapping("/admin/adminSuppressionUser")
+    @DeleteMapping("/adminSuppressionUser")
     public String deleteUser(@RequestParam("userId") long userId) {
-        User user = userRepository.findById(userId).get();
-        userRepository.delete(user);
-
-        List<UserChatroomRelation> relations = userChatroomRelationRepository.findByUserId(userId);
+        userService.deleteUserById(userId);
+        List<UserChatroomRelation> relations = userChatroomRelationService.findRelationsOfUser(userId);
         for(UserChatroomRelation relation : relations){
             if(relation.isOwned()) {
-                chatRoomRepository.findById(relation.getChatRoomId()).ifPresent(chatRoom -> chatRoomRepository.delete(chatRoom));
+                chatroomService.deleteChatRoom(relation.getChatroomId());
             }
-            userChatroomRelationRepository.delete(relation);
+            userChatroomRelationService.deleteRelation(relation);
         }
-
         return "redirect:/admin/adminSuppressionUser";
     }
 
-    @GetMapping("/admin/adminUserActivation")
+    @GetMapping("/adminUserActivation")
     public String getActivationUserForm(Model model, @AuthenticationPrincipal User admin) {
         model.addAttribute("admin",admin);
-        List<User> usersDesactive = userRepository.findByActive(false);
+        List<User> usersDesactive = userService.findAllInactiveUsers();
         model.addAttribute("users",usersDesactive);
         return "adminUserActivationPage";
     }
 
-    @PutMapping("/admin/adminUserActivation")
+    @PutMapping("/adminUserActivation")
     public String activateUser(@RequestParam("userId") long userId) {
-        User user = userRepository.findById(userId).get();
-        user.setActive(true);
-        userRepository.save(user);
+        userService.setStatusOfUser(userId,true);
         /*
          * activer les salons de l'utilisateur
-         *
-        List<UserChatroomRelation> relations = userChatroomRelationRepository.findByUserId(userId);
-        for(UserChatroomRelation relation : relations){
-            chatRoomRepository.findById(relation.getChatRoomId()).ifPresent(chatRoom -> {
-                chatRoom.setActive(true);
-                chatRoomRepository.save(chatRoom);
-            });
-        }
          */
+        List<UserChatroomRelation> relations = userChatroomRelationService.findRelationsOfUser(userId);
+        for(UserChatroomRelation relation : relations){
+            chatroomService.setStatusOfChatroom(relation.getChatroomId(),true);
+        }
+
         return "redirect:/admin/adminUserActivation";
     }
 }
