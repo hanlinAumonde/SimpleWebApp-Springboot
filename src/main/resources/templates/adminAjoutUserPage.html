@@ -8,8 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/adminAjoutUserPage.css}"/>
-    <link rel="script" th:href="@{/js/setBooleanValue.js}"/>
-    <link rel="script" th:href="@{/js/validateForm.js}"/>
+    <script type="text/javascript" th:src="@{/js/validateForm.js}"></script>
 </head>
 <body>
 <header class="text-white py-3">
@@ -45,7 +44,7 @@
                 </div>
             </div>
             <div class="row ms-4 me-4">
-                <form class="addUserForm" onsubmit="return validateForm()" th:action="@{/admin/adminAjoutUser}" th:object="${user}" method="POST">
+                <form class="addUserForm" onsubmit="return validateForm();" th:action="@{/admin/adminAjoutUser}" th:object="${user}" method="POST">
                     <div class="form-group">
                         <label for="lastName">Nom : </label>
                         <input type="text" th:field="*{lastName}" class="form-control" id="lastName" required/>
@@ -64,7 +63,7 @@
                     </div>
                     <div class="form-group">
                         <label for="password">Role : </label>
-                        <select onchange="setBooleanValue(this.value)" th:field="*{admin}" class="form-control" id="role" required>
+                        <select th:field="*{admin}" class="form-control" id="role" required>
                             <option value="false">USER</option>
                             <option value="true">ADMIN</option>
                         </select>

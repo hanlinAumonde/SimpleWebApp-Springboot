@@ -16,7 +16,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Collection;
@@ -31,9 +30,6 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
     @Lazy
     private PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private WithoutPasswordEncorder withoutPasswordEncorder;
-
     @Resource
     private UserService userService;
 
@@ -43,6 +39,9 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
     @Resource
     private UserChatroomRelationService userChatroomRelationService;
 
+    /*
+      Ce méthode est appelée par le filtre d'authentification pour authentifier l'utilisateur.
+    */
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         logger.info("Commence l'authentification");
@@ -70,8 +69,8 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
         }
 
         Collection<? extends GrantedAuthority> AUTHORITIES = account.get().getAuthorities();
-        PasswordEncoder ActuelPasswordEncoder = account.get().isAdmin() ? withoutPasswordEncorder : passwordEncoder;
-        if (ActuelPasswordEncoder.matches(password, account.get().getPassword())) {
+
+        if (passwordEncoder.matches(password, account.get().getPassword())) {
             userService.setFailedAttemptsOfUser(account.get().getId(),0);
             return new UsernamePasswordAuthenticationToken(account.get(), password, AUTHORITIES);
         } else {
@@ -79,7 +78,7 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
             if (attempts >= MAX_FAILED_ATTEMPTS) {
                 userService.lockUserAndResetFailedAttempts(account.get().getId());
                 /*
-                  change the status of all chatrooms that owned by user to inactive
+                  modifier le status de tous les chatrooms appartenant(non invité) à cet utilisateur à false
                 */
                 if(!account.get().isAdmin()){
                     userChatroomRelationService.findRelationsOfUser(account.get().getId())
@@ -90,8 +89,8 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
                 throw new BadCredentialsException("Trops de tentatives malveillantes, votre compte est blouqé");
             }
             userService.setFailedAttemptsOfUser(account.get().getId(),attempts);
-            logger.info("Wrong Password. Account will be locked after " + (MAX_FAILED_ATTEMPTS - account.get().getFailedAttempts()) + " more attempts");
-            throw new BadCredentialsException("Wrong Password. Account will be locked after " + (MAX_FAILED_ATTEMPTS - account.get().getFailedAttempts()) + " more attempts");
+            logger.info("Wrong Password. Account will be locked after " + (MAX_FAILED_ATTEMPTS - attempts) + " more attempts");
+            throw new BadCredentialsException("Wrong Password. Account will be locked after " + (MAX_FAILED_ATTEMPTS - attempts) + " more attempts");
         }
     }
     @Override

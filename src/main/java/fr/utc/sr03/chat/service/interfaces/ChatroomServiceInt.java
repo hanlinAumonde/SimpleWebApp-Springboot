@@ -5,6 +5,8 @@ import java.util.Optional;
 
 public interface ChatroomServiceInt {
     Optional<Chatroom> findChatroom(long chatroomId);
+
     void deleteChatRoom(long chatRoomId);
+
     void setStatusOfChatroom(long chatRoomId,boolean status);
 }

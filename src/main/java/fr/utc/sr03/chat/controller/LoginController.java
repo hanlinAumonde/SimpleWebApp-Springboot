@@ -35,6 +35,9 @@ public class LoginController {
     @Resource
     private UserChatroomRelationService userChatroomRelationService;
 
+    /**
+     * Cette méthode permet d'obtenir le formulaire de login
+     */
     @GetMapping("/login")
     public String getLogin(Model model, @RequestParam(value = "error", required = false) String error, HttpServletRequest request) {
         model.addAttribute("user", new User());
@@ -48,6 +51,10 @@ public class LoginController {
         return "loginPage";
     }
 
+    /**
+     * Cette méthode permet d'odentifier si l'utilisateur est un admin ou un user,
+     * et puis rediriger vers la page d'accueil correspondante
+     */
     @GetMapping("/accueil")
     public String getAcceuil(Model Page, @AuthenticationPrincipal User user){
         if(user.isAdmin()){

@@ -13,6 +13,9 @@ public class AccountLogoutSuccessHandler implements LogoutSuccessHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(AccountLogoutSuccessHandler.class);
 
+    /**
+     * Redirect vers la page de login
+     */
     @Override
     public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         if (authentication != null && authentication.getDetails() != null) {

@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -23,6 +24,10 @@ public class WebSecurityConfig {
     @Autowired
     private AccountAuthenticationProvider authProvider;
 
+    /**
+     * C'est pour inscrire le AuthenticationProvider dans le AuthenticationManager
+     * dans l'environment global de l'application
+     */
     @Bean
     public AuthenticationManager authManager(HttpSecurity http) throws Exception{
         AuthenticationManagerBuilder authenticationManagerBuilder =
@@ -31,6 +36,11 @@ public class WebSecurityConfig {
         return authenticationManagerBuilder.build();
     }
 
+    /**
+     * C'est le filtre de sécurité qui va être appliqué à toutes les requêtes
+     * Il replace "configure(HttpSecurity http)" dans la classe "WebSecurityConfigurerAdapter"
+     * qui a le meme fonctionnement
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
@@ -38,6 +48,7 @@ public class WebSecurityConfig {
                 .authorizeRequests()
                     .antMatchers("/login").permitAll()
                     .antMatchers("/logout").permitAll()
+                    .antMatchers("/reset-password/**").permitAll()
                     .antMatchers("/admin/**").hasRole("ADMIN")
                     .antMatchers("/user/**").hasRole("USER")
                     .anyRequest().authenticated()
@@ -55,17 +66,27 @@ public class WebSecurityConfig {
                     .clearAuthentication(true)
                     .logoutSuccessHandler(new AccountLogoutSuccessHandler())
                     .permitAll()
-                .and();
-
+                .and()
+                .sessionManagement()
+                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                    .maximumSessions(1)
+                    .expiredUrl("/login?expired")
+                    .maxSessionsPreventsLogin(true);
 
         return http.build();
     }
 
+    /**
+     * C'est pour encoder le mot de passe
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * C'est pour ignorer les fichiers statiques
+     */
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring().antMatchers("/css/**", "/js/**");

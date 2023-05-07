@@ -26,6 +26,7 @@
             <label for="password">Password : </label>
             <input type="password" th:field="*{password}" name="password" class="form-control" id="password" required/>
         </div>
+        <a th:href="@{/reset-password/forget-password}" style="color: #0d6efd"> Mot de passe oublié ?</a>
         <br/>
         <button type="submit" class="btn btn-primary">Connexion</button>
         <div class="error-wrapper" style="height: 1.5em;width: 100%;text-align: center;color: red">

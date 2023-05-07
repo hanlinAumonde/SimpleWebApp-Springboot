@@ -14,6 +14,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByAdmin(boolean isAdmin);
 
+    List<User> findByActive(boolean isActive);
+
     @Modifying
     @Query("update User u set u.active = ?2 where u.id = ?1")
     void updateActive(long userId, boolean status);
@@ -21,4 +23,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("update User u set u.failedAttempts = ?2 where u.id = ?1")
     void updateFailedAttempts(long userId, int failedAttempts);
+
+    @Modifying
+    @Query("update User u set u.pwd = ?2 where u.id = ?1")
+    void updatePwd(long userId, String pwd);
+
+    Optional<User> findByMail(String email);
 }

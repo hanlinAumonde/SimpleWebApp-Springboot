@@ -1,6 +1,8 @@
 package fr.utc.sr03.chat.service.implementations;
 
+import fr.utc.sr03.chat.dao.ResetPasswordValidateRespository;
 import fr.utc.sr03.chat.dao.UserRepository;
+import fr.utc.sr03.chat.model.ResetPasswordValidate;
 import fr.utc.sr03.chat.model.User;
 import fr.utc.sr03.chat.service.interfaces.UserServiceInt;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,8 +11,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserService implements UserServiceInt {
@@ -21,6 +26,12 @@ public class UserService implements UserServiceInt {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Resource
+    private EmailService emailService;
+
+    @Autowired
+    private ResetPasswordValidateRespository resetPasswordValidateRespository;
 
     @Override
     public List<User> findAllUsers() {
@@ -53,7 +64,7 @@ public class UserService implements UserServiceInt {
 
     @Override
     public List<User> findAllInactiveUsers() {
-        return userRepository.findByAdmin(false);
+        return userRepository.findByActive(false);
     }
 
     @Transactional
@@ -76,8 +87,36 @@ public class UserService implements UserServiceInt {
     }
 
     @Override
+    public Optional<User> findUserByEmail(String email) {
+        return userRepository.findByMail(email);
+    }
+
+    @Override
     public Optional<User> findUserOrAdmin(String email, boolean isAdmin) {
         return userRepository.findByMailAndAdmin(email, isAdmin);
+    }
+
+    @Override
+    public void sendResetPasswordEmail(User user, HttpServletRequest request) {
+        String token = UUID.randomUUID().toString();
+        ResetPasswordValidate resetPasswordValidate = new ResetPasswordValidate(token, user);
+        resetPasswordValidateRespository.save(resetPasswordValidate);
+        String ResetPasswordLink = "http://" + request.getServerName() + ":" + request.getServerPort()
+                + "/reset-password/reset-password-form?token=" + token;
+        String subject = "Reset Password";
+        String content = "Bonjour " + user.getFirstName() + ",\n\n"
+                + "Cliquer sur le lien ci-dessous pour réinitialiser votre mot de passe :\n"
+                + ResetPasswordLink + "\n\n"
+                + "Attention : ce lien n'est valide que pendant 1 heure\n\n"
+                + "Bien cordialement,\n"
+                + "Chat Team";
+        emailService.sendSimpleMessage(user.getMail(), subject, content);
+    }
+
+    @Transactional
+    @Override
+    public void resetPassword(User user, String password) {
+        userRepository.updatePwd(user.getId(), passwordEncoder.encode(password));
     }
 
 }

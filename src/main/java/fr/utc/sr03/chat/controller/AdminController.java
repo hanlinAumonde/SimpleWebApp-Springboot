@@ -27,6 +27,11 @@ public class AdminController {
     @Resource
     private UserChatroomRelationService userChatroomRelationService;
 
+    //Tous les anootations @AuthenticationPrincipal sont pour récupérer les informations de l'utilisateur connecté
+
+    /**
+     * C'est la page d'accueil de l'admin, elle affiche tous les utilisateurs de la base de données
+     */
     @GetMapping("/adminAccueil")
     public String getAdminAccueil(Model adminPage, @AuthenticationPrincipal User admin) {
         List<User> users = userService.findAllUsers();
@@ -35,6 +40,9 @@ public class AdminController {
         return "adminPage";
     }
 
+    /**
+     * Cette méthode permet d'obtenir le formulaire d'ajout d'un utilisateur
+     */
     @GetMapping("/adminAjoutUser")
     public String getAddUserForm(Model model, @ModelAttribute(value = "msg")String msg , @AuthenticationPrincipal User admin) {
         model.addAttribute("admin",admin);
@@ -47,6 +55,9 @@ public class AdminController {
         return "adminAjoutUserPage";
     }
 
+    /**
+     * Cette méthode permet d'ajouter un utilisateur à la base de données
+     */
     @PostMapping("/adminAjoutUser")
     public String addUserToBD(@ModelAttribute User user, RedirectAttributes redirectAttributes) {
         boolean userAdded = userService.addUser(user);
@@ -58,6 +69,9 @@ public class AdminController {
         return "redirect:/admin/adminAjoutUser";
     }
 
+    /**
+     * Cette méthode permet d'oobtenir le formulaire de suppression d'un utilisateur
+     */
     @GetMapping("/adminSuppressionUser")
     public String getDeleteUserForm(Model model, @AuthenticationPrincipal User admin) {
         model.addAttribute("admin",admin);
@@ -66,6 +80,9 @@ public class AdminController {
         return "adminSuppressionUserPage";
     }
 
+    /**
+     * Cette méthode permet de supprimer un utilisateur de la base de données
+     */
     @DeleteMapping("/adminSuppressionUser")
     public String deleteUser(@RequestParam("userId") long userId) {
         userService.deleteUserById(userId);
@@ -79,6 +96,9 @@ public class AdminController {
         return "redirect:/admin/adminSuppressionUser";
     }
 
+    /**
+     * Cette méthode permet d'obtenir le liste des utilisateurs désactivés
+     */
     @GetMapping("/adminUserActivation")
     public String getActivationUserForm(Model model, @AuthenticationPrincipal User admin) {
         model.addAttribute("admin",admin);
@@ -87,6 +107,9 @@ public class AdminController {
         return "adminUserActivationPage";
     }
 
+    /**
+     * Cette méthode permet d'activer un utilisateur
+     */
     @PutMapping("/adminUserActivation")
     public String activateUser(@RequestParam("userId") long userId) {
         userService.setStatusOfUser(userId,true);
