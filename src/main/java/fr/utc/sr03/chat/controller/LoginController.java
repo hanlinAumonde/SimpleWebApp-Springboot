@@ -8,7 +8,10 @@ import fr.utc.sr03.chat.service.implementations.UserChatroomRelationService;
 import fr.utc.sr03.chat.service.implementations.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,6 +43,16 @@ public class LoginController {
      */
     @GetMapping("/login")
     public String getLogin(Model model, @RequestParam(value = "error", required = false) String error, HttpServletRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
+            User user = (User) auth.getPrincipal(); // obtenir l'utilisateur connecté s'il existe
+            if (user.isAdmin()) {
+                return "redirect:/admin/adminAccueil"; // si le user est un admin, rediriger vers la page d'accueil de l'admin
+            } else {
+                return "userPage"; // si le user est un user, rediriger vers la page d'accueil du user
+            }
+        }
+
         model.addAttribute("user", new User());
         HttpSession session = request.getSession();
         String errorMsg = (String) session.getAttribute("error");
@@ -64,6 +77,7 @@ public class LoginController {
         }else{
             logger.info("login du user");
             logger.info("user's authorities : " + user.getAuthorities());
+            /*
             long userId = user.getId();
             List<Chatroom> ChatroomsOwned = new ArrayList<>();
             List<Chatroom> ChatroomsInvited = new ArrayList<>();
@@ -88,6 +102,7 @@ public class LoginController {
             Page.addAttribute("users",userService.findAllUsers());
             Page.addAttribute("ChatroomsOwnedByUser",ChatroomsOwned);
             Page.addAttribute("ChatroomsInviteUser",ChatroomsInvited);
+            */
             return "userPage";
         }
     }

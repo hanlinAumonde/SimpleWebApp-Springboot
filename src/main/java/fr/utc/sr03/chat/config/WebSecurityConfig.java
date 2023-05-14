@@ -70,7 +70,7 @@ public class WebSecurityConfig {
                 .sessionManagement()
                     .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                     .maximumSessions(1)
-                    .expiredUrl("/login?expired")
+                    .expiredUrl("/login")
                     .maxSessionsPreventsLogin(true);
 
         return http.build();
