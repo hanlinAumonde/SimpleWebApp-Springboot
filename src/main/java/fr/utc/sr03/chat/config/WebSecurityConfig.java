@@ -16,6 +16,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+
 
 @Configuration
 @EnableWebSecurity
@@ -44,13 +46,19 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http
+        http    .cors()
+                .and()
+                //.csrf().disable()
+                .csrf()
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .and()
                 .authorizeRequests()
                     .antMatchers("/login").permitAll()
                     .antMatchers("/logout").permitAll()
                     .antMatchers("/reset-password/**").permitAll()
                     .antMatchers("/admin/**").hasRole("ADMIN")
                     .antMatchers("/user/**").hasRole("USER")
+                    .antMatchers("/logged_user").permitAll()
                     .anyRequest().authenticated()
                 .and()
                 .formLogin()
@@ -75,6 +83,8 @@ public class WebSecurityConfig {
 
         return http.build();
     }
+
+
 
     /**
      * C'est pour encoder le mot de passe

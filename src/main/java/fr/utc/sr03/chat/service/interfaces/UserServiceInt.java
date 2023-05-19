@@ -1,6 +1,7 @@
 package fr.utc.sr03.chat.service.interfaces;
 
 import fr.utc.sr03.chat.model.User;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -31,4 +32,5 @@ public interface UserServiceInt {
     void sendResetPasswordEmail(User user, HttpServletRequest request);
 
     void resetPassword(User user, String password);
+
 }

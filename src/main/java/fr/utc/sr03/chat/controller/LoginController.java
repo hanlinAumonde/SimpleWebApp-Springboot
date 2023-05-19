@@ -49,7 +49,7 @@ public class LoginController {
             if (user.isAdmin()) {
                 return "redirect:/admin/adminAccueil"; // si le user est un admin, rediriger vers la page d'accueil de l'admin
             } else {
-                return "userPage"; // si le user est un user, rediriger vers la page d'accueil du user
+                return "redirect:http://localhost:3000"; // si le user est un user, rediriger vers la page d'accueil du user
             }
         }
 
@@ -103,7 +103,8 @@ public class LoginController {
             Page.addAttribute("ChatroomsOwnedByUser",ChatroomsOwned);
             Page.addAttribute("ChatroomsInviteUser",ChatroomsInvited);
             */
-            return "userPage";
+            //return "userPage";
+            return "redirect:http://localhost:3000";
         }
     }
 
