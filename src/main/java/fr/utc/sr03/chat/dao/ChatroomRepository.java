@@ -5,10 +5,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface ChatroomRepository extends JpaRepository<Chatroom, Long> {
     Optional<Chatroom> findById(long chatroomId);
+    Optional<Chatroom> findByTitreAndDescriptionAndHoraireCommenceAndHoraireTermine(String titre, String description, LocalDateTime horaireCommence, LocalDateTime horaireTermine);
 
     @Modifying
     @Query("update Chatroom c set c.active = ?2 where c.id = ?1")

@@ -65,10 +65,4 @@ public class ResetPasswordValidate {
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(this.expiryDate);
     }
-
-    /*
-    public int timeExpiredLeft(int timeInMinutes){
-        return LocalDateTime.now().plusMinutes(timeInMinutes).compareTo(this.expiryDate);
-    }
-     */
 }

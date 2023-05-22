@@ -50,7 +50,7 @@ public class WebSecurityConfig {
                 .and()
                 //.csrf().disable()
                 .csrf()
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .and()
                 .authorizeRequests()
                     .antMatchers("/login").permitAll()

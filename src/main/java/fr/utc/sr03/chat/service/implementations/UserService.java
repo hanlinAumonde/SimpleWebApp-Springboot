@@ -7,6 +7,9 @@ import fr.utc.sr03.chat.model.User;
 import fr.utc.sr03.chat.service.interfaces.UserServiceInt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +42,11 @@ public class UserService implements UserServiceInt {
     }
 
     @Override
+    public User getLoggedUser() {
+        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    }
+
+    @Override
     public boolean addUser(User user) {
         List<User> users = userRepository.findAll();
         for(User u : users){
@@ -56,6 +64,7 @@ public class UserService implements UserServiceInt {
         return userRepository.findByAdmin(false);
     }
 
+    @Transactional
     @Override
     public void deleteUserById(Long id) {
         User user = userRepository.findById(id).get();
@@ -92,6 +101,11 @@ public class UserService implements UserServiceInt {
     }
 
     @Override
+    public Optional<User> findUserById(long userId) {
+        return userRepository.findById(userId);
+    }
+
+    @Override
     public Optional<User> findUserOrAdmin(String email, boolean isAdmin) {
         return userRepository.findByMailAndAdmin(email, isAdmin);
     }
@@ -117,6 +131,12 @@ public class UserService implements UserServiceInt {
     @Override
     public void resetPassword(User user, String password) {
         userRepository.updatePwd(user.getId(), passwordEncoder.encode(password));
+    }
+
+    @Override
+    public boolean checkUserLoginStatus() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken));
     }
 
 }

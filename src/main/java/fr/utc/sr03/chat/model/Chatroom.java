@@ -3,7 +3,9 @@ package fr.utc.sr03.chat.model;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.Objects;
 
 @Entity
 @Table(name = "chatrooms")
@@ -19,14 +21,10 @@ public class Chatroom {
     private String description;
 
     @Column(name = "horaire_commence")
-    @Temporal(TemporalType.DATE)
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private Date HoraireCommence;
+    private LocalDateTime horaireCommence;
 
     @Column(name = "horaire_termine")
-    @Temporal(TemporalType.DATE)
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private Date HoraireTermine;
+    private LocalDateTime horaireTermine;
 
     @Column(name = "is_active")
     private boolean active;
@@ -57,23 +55,39 @@ public class Chatroom {
         this.description = description;
     }
 
-    public Date getHoraireCommence() {
-        return HoraireCommence;
+    public LocalDateTime getHoraireCommence() {
+        return horaireCommence;
     }
 
-    public void setHoraireCommence(Date horaireCommence) {
-        this.HoraireCommence = horaireCommence;
+    public void setHoraireCommence(LocalDateTime horaireCommence) {
+        this.horaireCommence = horaireCommence;
     }
 
-    public Date getHoraireTermine() {
-        return HoraireTermine;
+    public LocalDateTime getHoraireTermine() {
+        return horaireTermine;
     }
 
-    public void setHoraireTermine(Date horaireTermine) {
-        this.HoraireTermine = horaireTermine;
+    public void setHoraireTermine(LocalDateTime horaireTermine) {
+        this.horaireTermine = horaireTermine;
     }
 
     public boolean isActive() { return active; }
 
     public void setActive(boolean active) { this.active = active; }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+
+        Chatroom chatroom = (Chatroom) obj;
+
+        return titre.equals(chatroom.titre) && description.equals(chatroom.description);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(titre, description);
+    }
+
 }

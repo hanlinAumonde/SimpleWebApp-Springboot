@@ -10,4 +10,10 @@ public interface UserChatroomRelationRepository extends JpaRepository<UserChatro
     List<UserChatroomRelation> findByUserIdAndOwned(long userId, boolean isOwned);
 
     List<UserChatroomRelation> findByUserId(long userId);
+
+    List<UserChatroomRelation> findByChatroomIdAndOwned(long chatroomId, boolean isOwned);
+
+    List<UserChatroomRelation> findByChatroomId(long chatroomId);
+
+    Optional<UserChatroomRelation> findByChatroomIdAndUserId(long chatroomId, long userId);
 }

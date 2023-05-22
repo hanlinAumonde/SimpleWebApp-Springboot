@@ -155,4 +155,9 @@ public class User implements UserDetails {
 
         return mail.equals(user.mail);
     }
+
+    @Override
+    public int hashCode() {
+        return mail.hashCode();
+    }
 }

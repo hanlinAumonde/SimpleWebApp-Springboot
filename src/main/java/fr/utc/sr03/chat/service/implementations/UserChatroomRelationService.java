@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserChatroomRelationService implements UserChatroomRelationServiceInt {
@@ -20,12 +21,27 @@ public class UserChatroomRelationService implements UserChatroomRelationServiceI
     }
 
     @Override
+    public void addRelation(long userId, long chatroomId , boolean isOwned) {
+        UserChatroomRelation relation = new UserChatroomRelation();
+        relation.setUserId(userId);
+        relation.setChatroomId(chatroomId);
+        relation.setOwned(isOwned);
+        userChatroomRelationRepository.save(relation);
+    }
+
+    @Override
+    public List<UserChatroomRelation> findUsersInvitedToChatroom(long chatroomId) {
+        return userChatroomRelationRepository.findByChatroomIdAndOwned(chatroomId,false);
+    }
+
+    @Override
+    public Optional<UserChatroomRelation> findOwnerOfChatroom(long chatroomId) {
+        return userChatroomRelationRepository.findByChatroomIdAndOwned(chatroomId,true).stream().findFirst();
+    }
+
+    @Override
     public void deleteRelation(UserChatroomRelation relation) {
         userChatroomRelationRepository.delete(relation);
     }
 
-    @Override
-    public List<UserChatroomRelation> findChatroomsOwnedOrInviting(long userId, boolean isOwned) {
-        return userChatroomRelationRepository.findByUserIdAndOwned(userId, isOwned);
-    }
 }

@@ -85,14 +85,14 @@ public class AdminController {
      */
     @DeleteMapping("/adminSuppressionUser")
     public String deleteUser(@RequestParam("userId") long userId) {
-        userService.deleteUserById(userId);
         List<UserChatroomRelation> relations = userChatroomRelationService.findRelationsOfUser(userId);
         for(UserChatroomRelation relation : relations){
+            userChatroomRelationService.deleteRelation(relation);
             if(relation.isOwned()) {
                 chatroomService.deleteChatRoom(relation.getChatroomId());
             }
-            userChatroomRelationService.deleteRelation(relation);
         }
+        userService.deleteUserById(userId);
         return "redirect:/admin/adminSuppressionUser";
     }
 
