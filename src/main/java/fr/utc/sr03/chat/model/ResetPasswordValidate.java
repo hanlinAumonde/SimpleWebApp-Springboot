@@ -4,6 +4,7 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "reset_password_validate")
 public class ResetPasswordValidate {
     private static final int EXPIRATION = 60;
 

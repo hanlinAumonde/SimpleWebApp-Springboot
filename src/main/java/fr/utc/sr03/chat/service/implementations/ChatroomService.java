@@ -1,6 +1,5 @@
 package fr.utc.sr03.chat.service.implementations;
 
-import fr.utc.sr03.chat.controller.LoginController;
 import fr.utc.sr03.chat.dao.ChatroomRepository;
 import fr.utc.sr03.chat.dao.UserChatroomRelationRepository;
 import fr.utc.sr03.chat.dao.UserRepository;
@@ -24,7 +23,7 @@ import java.util.stream.Collectors;
 @Service
 public class ChatroomService implements ChatroomServiceInt {
 
-    private final Logger logger = LoggerFactory.getLogger(LoginController.class);
+    private final Logger logger = LoggerFactory.getLogger(ChatroomService.class);
 
     @Resource
     private UserChatroomRelationService userChatroomRelationService;
@@ -81,13 +80,13 @@ public class ChatroomService implements ChatroomServiceInt {
         }
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     @Override
     public List<Chatroom> getChatroomsOwnedOrJoinedByUser(long userId, boolean isOwner) {
         List<Chatroom> Chatrooms = new ArrayList<>();
         List<UserChatroomRelation> ChatroomsOwnedOrJoined = userChatroomRelationRepository.findByUserIdAndOwned(userId, isOwner);
         for(UserChatroomRelation owned : ChatroomsOwnedOrJoined){
-            Chatroom ChatroomTemp = findChatroom(owned.getChatroomId()).get();
+            Chatroom ChatroomTemp = chatRoomRepository.findById(owned.getChatroomId()).get();
             LocalDateTime currentDate = LocalDateTime.now();
             if(ChatroomTemp.getHoraireTermine().isAfter(currentDate)){
                 Chatrooms.add(ChatroomTemp);
@@ -96,7 +95,7 @@ public class ChatroomService implements ChatroomServiceInt {
         return Chatrooms;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     @Override
     public List<User> getUsersInvitedToChatroom(long chatroomId) {
         List<User> usersInvited = new ArrayList<>();
@@ -109,15 +108,28 @@ public class ChatroomService implements ChatroomServiceInt {
         return usersInvited;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     @Override
     public List<User> getUsersNotInvitedToChatroom(long chatroomId){
         List<User> allUsers = userRepository.findByAdmin(false);
-        List<User> usersInvited = getUsersInvitedToChatroom(chatroomId);
+        List<User> usersInvited = new ArrayList<>();
+        for(UserChatroomRelation user : userChatroomRelationRepository.findByChatroomId(chatroomId)){
+            usersInvited.add(userRepository.findById(user.getUserId()).get());
+        }
         Set<Long> idOfUsersInvited = usersInvited.stream().map(User::getId).collect(Collectors.toSet());
         return allUsers.stream().filter(
                 user -> !idOfUsersInvited.contains(user.getId())
         ).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<User> getAllUsersInChatroom(long chatroomId){
+        List<User> allUsersInChatroom = new ArrayList<>();
+        for(UserChatroomRelation user : userChatroomRelationRepository.findByChatroomId(chatroomId)){
+            userRepository.findById(user.getUserId()).ifPresent(allUsersInChatroom::add);
+        }
+        return allUsersInChatroom;
     }
 
     @Transactional
@@ -153,6 +165,7 @@ public class ChatroomService implements ChatroomServiceInt {
         }
     }
 
+    @Transactional
     @Override
     public boolean updateChatroom(ChatroomRequestDTO chatroomRequestDTO, long chatroomId) {
         try{
@@ -162,19 +175,16 @@ public class ChatroomService implements ChatroomServiceInt {
                 chatroom.setTitre(chatroomRequestDTO.getTitre());
                 isChanged = true;
             }
-            logger.info("point 1" + chatroomRequestDTO.getTitre() + "|" + chatroom.getTitre());
             if(!chatroom.getDescription().equals(chatroomRequestDTO.getDescription())){
                 chatroom.setDescription(chatroomRequestDTO.getDescription());
                 isChanged = true;
             }
-            logger.info("point 2" + chatroomRequestDTO.getDescription() + "|" + chatroom.getDescription());
             if(!Objects.equals(chatroomRequestDTO.getStartDate(), "")){
                 if(!chatroom.getHoraireCommence().equals(LocalDateTime.parse(chatroomRequestDTO.getStartDate()))){
                     chatroom.setHoraireCommence(LocalDateTime.parse(chatroomRequestDTO.getStartDate()));
                     isChanged = true;
                 }
             }
-            logger.info("point 3" + chatroomRequestDTO.getStartDate() + "|" + chatroom.getHoraireCommence());
             LocalDateTime dateEnd = chatroom.getHoraireCommence().plusDays(
                     chatroomRequestDTO.getDuration()
             );
@@ -182,15 +192,22 @@ public class ChatroomService implements ChatroomServiceInt {
                 chatroom.setHoraireTermine(dateEnd);
                 isChanged = true;
             }
-            logger.info("point 4" + dateEnd + "|" + chatroom.getHoraireTermine());
-            logger.info(isChanged + "");
             if(isChanged){
                 chatRoomRepository.save(chatroom);
             }
-            logger.info("point 5");
             return isChanged;
-        }catch (Exception e){
+        }catch (RuntimeException e){
             logger.error("Error while updating chatroom with id " + chatroomId + " : " + e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public boolean checkUserIsOwnerOfChatroom(long userId, long chatroomId) {
+        try {
+            return userChatroomRelationRepository.findByUserIdAndChatroomIdAndOwned(userId, chatroomId, true).isPresent();
+        } catch (RuntimeException e) {
+            logger.error("Error while checking if user with id " + userId + " is owner of chatroom with id " + chatroomId + " : " + e.getMessage());
             return false;
         }
     }

@@ -5,18 +5,20 @@ import fr.utc.sr03.chat.security.AccountAuthenticationProvider;
 import fr.utc.sr03.chat.security.AccountAuthenticationSuccessHandler;
 import fr.utc.sr03.chat.security.AccountLogoutSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 
 
 @Configuration
@@ -48,7 +50,6 @@ public class WebSecurityConfig {
 
         http    .cors()
                 .and()
-                //.csrf().disable()
                 .csrf()
                     .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .and()
@@ -58,7 +59,8 @@ public class WebSecurityConfig {
                     .antMatchers("/reset-password/**").permitAll()
                     .antMatchers("/admin/**").hasRole("ADMIN")
                     .antMatchers("/user/**").hasRole("USER")
-                    .antMatchers("/logged_user").permitAll()
+                    .antMatchers("/users/logged").permitAll()
+                    .antMatchers("ws://localhost:8080/**").permitAll()
                     .anyRequest().authenticated()
                 .and()
                 .formLogin()
@@ -73,13 +75,7 @@ public class WebSecurityConfig {
                     .invalidateHttpSession(true)
                     .clearAuthentication(true)
                     .logoutSuccessHandler(new AccountLogoutSuccessHandler())
-                    .permitAll()
-                .and()
-                .sessionManagement()
-                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                    .maximumSessions(1)
-                    .expiredUrl("/login")
-                    .maxSessionsPreventsLogin(true);
+                    .permitAll();
 
         return http.build();
     }
@@ -101,4 +97,14 @@ public class WebSecurityConfig {
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring().antMatchers("/css/**", "/js/**");
     }
+
+
+    //@Profile("prod")
+    @Bean
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+    public ServerEndpointExporter serverEndpointExporter() {
+        return new ServerEndpointExporter();
+    }
+
+
 }

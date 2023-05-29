@@ -77,33 +77,6 @@ public class LoginController {
         }else{
             logger.info("login du user");
             logger.info("user's authorities : " + user.getAuthorities());
-            /*
-            long userId = user.getId();
-            List<Chatroom> ChatroomsOwned = new ArrayList<>();
-            List<Chatroom> ChatroomsInvited = new ArrayList<>();
-
-            List<UserChatroomRelation> ChatroomsOwnedByUser = userChatroomRelationService.findChatroomsOwnedOrInviting(userId,true);
-            for(UserChatroomRelation owned : ChatroomsOwnedByUser){
-                Chatroom ChatroomTemp = chatroomService.findChatroom(owned.getChatroomId()).get();
-                Date currentDate = new Date();
-                if(ChatroomTemp.getHoraireTermine().getTime() > currentDate.getTime()){
-                    ChatroomsOwned.add(ChatroomTemp);
-                }
-            }
-            List<UserChatroomRelation> ChatroomsInviteUser = userChatroomRelationService.findChatroomsOwnedOrInviting(userId,false);
-            for(UserChatroomRelation invited : ChatroomsInviteUser){
-                Chatroom ChatroomTemp = chatroomService.findChatroom(invited.getChatroomId()).get();
-                Date currentDate = new Date();
-                if(ChatroomTemp.getHoraireTermine().getTime() > currentDate.getTime()){
-                    ChatroomsInvited.add(ChatroomTemp);
-                }
-            }
-
-            Page.addAttribute("users",userService.findAllUsers());
-            Page.addAttribute("ChatroomsOwnedByUser",ChatroomsOwned);
-            Page.addAttribute("ChatroomsInviteUser",ChatroomsInvited);
-            */
-            //return "userPage";
             return "redirect:http://localhost:3000";
         }
     }

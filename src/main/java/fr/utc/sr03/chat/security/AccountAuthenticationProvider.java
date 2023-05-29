@@ -4,7 +4,6 @@ import fr.utc.sr03.chat.model.User;
 import fr.utc.sr03.chat.service.implementations.ChatroomService;
 import fr.utc.sr03.chat.service.implementations.UserChatroomRelationService;
 import fr.utc.sr03.chat.service.implementations.UserService;
-import fr.utc.sr03.chat.service.utils.WithoutPasswordEncorder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

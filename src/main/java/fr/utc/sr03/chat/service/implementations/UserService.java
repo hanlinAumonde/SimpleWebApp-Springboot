@@ -136,7 +136,10 @@ public class UserService implements UserServiceInt {
     @Override
     public boolean checkUserLoginStatus() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken));
+        return (auth != null &&
+                auth.isAuthenticated() &&
+                !(auth instanceof AnonymousAuthenticationToken)) &&
+                userRepository.findById(((User) auth.getPrincipal()).getId()).isPresent();
     }
 
 }

@@ -16,4 +16,6 @@ public interface UserChatroomRelationRepository extends JpaRepository<UserChatro
     List<UserChatroomRelation> findByChatroomId(long chatroomId);
 
     Optional<UserChatroomRelation> findByChatroomIdAndUserId(long chatroomId, long userId);
+
+    Optional<UserChatroomRelation> findByUserIdAndChatroomIdAndOwned(long userId, long chatroomId, boolean b);
 }

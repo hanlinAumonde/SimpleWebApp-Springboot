@@ -18,6 +18,8 @@ public interface ChatroomServiceInt {
 
     List<User> getUsersNotInvitedToChatroom(long chatroomId);
 
+    List<User> getAllUsersInChatroom(long chatroomId);
+
     boolean deleteChatRoom(long chatRoomId);
 
     void setStatusOfChatroom(long chatRoomId,boolean status);
@@ -25,4 +27,6 @@ public interface ChatroomServiceInt {
     boolean deleteUserInvited(long chatroomId, long userId);
 
     boolean updateChatroom(ChatroomRequestDTO chatroomRequestDTO, long chatroomId);
+
+    boolean checkUserIsOwnerOfChatroom(long userId, long chatroomId);
 }
