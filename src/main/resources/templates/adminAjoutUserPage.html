@@ -43,8 +43,8 @@
                     <h2>Ajouter un utilisateur : </h2>
                 </div>
             </div>
-            <div class="row ms-4 me-4">
-                <form class="addUserForm" onsubmit="return validateForm();" th:action="@{/admin/adminAjoutUser}" th:object="${user}" method="POST">
+            <div class="row ms-4 me-4"><div class="addUserForm">
+                <form onsubmit="return validateForm();" th:action="@{/admin/adminAjoutUser}" th:object="${user}" method="POST">
                     <div class="form-group">
                         <label for="lastName">Nom : </label>
                         <input type="text" th:field="*{lastName}" class="form-control" id="lastName" required/>
@@ -71,7 +71,7 @@
                     <button type="submit" class="btn btn-primary">Enregistrer</button>
                     <p th:if="${error != null}" th:text="${error}" style="color: red;"></p>
                     <p th:if="${success != null}" th:text="${success}" style="color: limegreen;"></p>
-                </form>
+                </form></div>
             </div>
         </main>
         <div class="col-lg-3 col-md-3 col-sm-4">
@@ -89,6 +89,7 @@
         </div>
     </div>
 </div>
+<div class="footer-cover"></div>
 <footer class="bg-dark text-white py-4 mt-5">
     <div class="d-flex justify-content-center">
         <div>
@@ -97,5 +98,6 @@
         </div>
     </div>
 </footer>
+
 </body>
 </html>

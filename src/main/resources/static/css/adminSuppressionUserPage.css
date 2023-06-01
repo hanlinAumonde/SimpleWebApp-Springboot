@@ -66,3 +66,26 @@ footer {
     text-align: center;
     padding: 10px;
 }
+
+.pageNumber{
+    display: grid;
+    grid-template-columns: 3fr 1fr 1fr;
+    grid-template-rows: auto;
+    justify-content: center;
+}
+
+.a-left{
+    grid-column-start:2;
+    grid-column-end: 3;
+}
+
+.h5-center{
+    font-style: oblique;
+    grid-column-start:1;
+    grid-column-end: 2;
+}
+
+.a-right{
+    grid-column-start:3;
+    grid-column-end: 4;
+}

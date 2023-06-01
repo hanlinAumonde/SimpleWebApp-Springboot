@@ -12,6 +12,7 @@ import fr.utc.sr03.chat.service.utils.DTOMapper;
 import fr.utc.sr03.chat.service.utils.UserDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -33,6 +34,8 @@ import java.util.stream.Collectors;
 public class UserWebServiceController {
 
     private final Logger logger = LoggerFactory.getLogger(UserWebServiceController.class);
+
+    private static final int defaultPageSize = 5;
 
     @Resource
     private UserService userService;
@@ -62,16 +65,12 @@ public class UserWebServiceController {
     }
 
     @GetMapping("/user/users/other")
-    public ResponseEntity<List<UserDTO>> getOtherUsers(){
+    public ResponseEntity<Page<UserDTO>> getOtherUsers(@RequestParam(defaultValue ="0")int page){
         if(userService.checkUserLoginStatus()){
-            List<User> users = userService.findAllUsersNotAdmin();
-            User user = userService.getLoggedUser();
-            users.remove(user);
-            return ResponseEntity.ok(
-                    users.stream().map(DTOMapper::toUserDTO).collect(Collectors.toList())
-            );
+            Page<User> users = userService.findAllOtherUsersNotAdminByPage(page, defaultPageSize, userService.getLoggedUser().getId());
+            return ResponseEntity.ok(users.map(DTOMapper::toUserDTO));
         }
-        return ResponseEntity.status(401).body(new ArrayList<>());
+        return ResponseEntity.status(401).body(Page.empty());
     }
 
     @PostMapping("/user/chatrooms/")
@@ -89,53 +88,45 @@ public class UserWebServiceController {
     }
 
     @GetMapping("/user/users/{userId}/chatrooms/owned")
-    public ResponseEntity<List<ChatroomDTO>> getChatroomsOwned(@PathVariable long userId){
+    public ResponseEntity<Page<ChatroomDTO>> getChatroomsOwnedOfPage(@PathVariable long userId, @RequestParam(defaultValue = "0")int page){
         if(userService.checkUserLoginStatus() && userId == userService.getLoggedUser().getId()){
-            List<Chatroom> chatrooms = chatroomService.getChatroomsOwnedOrJoinedByUser(userId,true);
-            return ResponseEntity.ok(
-                    chatrooms.stream().map(DTOMapper::toChatroomDTO).collect(Collectors.toList())
-            );
+            Page<Chatroom> chatrooms = chatroomService.getChatroomsOwnedOrJoinedOfUserByPage(userId,true,page,defaultPageSize);
+            return ResponseEntity.ok(chatrooms.map(DTOMapper::toChatroomDTO));
         }
-        return ResponseEntity.status(401).body(new ArrayList<>());
+        return ResponseEntity.status(401).body(Page.empty());
     }
 
     @GetMapping("/user/users/{userId}/chatrooms/joined")
-    public ResponseEntity<List<ChatroomDTO>> getChatroomsJoined(@PathVariable long userId){
+    public ResponseEntity<Page<ChatroomDTO>> getChatroomsJoinedOfPage(@PathVariable long userId, @RequestParam(defaultValue = "0")int page){
         if(userService.checkUserLoginStatus() && userId == userService.getLoggedUser().getId()){
-            List<Chatroom> chatrooms = chatroomService.getChatroomsOwnedOrJoinedByUser(userId,false);
-            return ResponseEntity.ok(
-                    chatrooms.stream().map(DTOMapper::toChatroomDTO).collect(Collectors.toList())
-            );
+            Page<Chatroom> chatrooms = chatroomService.getChatroomsOwnedOrJoinedOfUserByPage(userId,false,page,defaultPageSize);
+            return ResponseEntity.ok(chatrooms.map(DTOMapper::toChatroomDTO));
         }
-        return ResponseEntity.status(401).body(new ArrayList<>());
+        return ResponseEntity.status(401).body(Page.empty());
     }
 
     @GetMapping("/user/chatrooms/{chatroomId}/users/invited")
-    public ResponseEntity<List<UserDTO>> getUsersInvited(@PathVariable long chatroomId){
+    public ResponseEntity<Page<UserDTO>> getUsersInvitedOfPage(@PathVariable long chatroomId, @RequestParam(defaultValue="0")int page){
         boolean checkOwner = chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),chatroomId);
         if(userService.checkUserLoginStatus() && checkOwner){
-            List<User> users = chatroomService.getUsersInvitedToChatroom(chatroomId);
-            return ResponseEntity.ok(
-                    users.stream().map(DTOMapper::toUserDTO).collect(Collectors.toList())
-            );
+            Page<User> users = userService.findUsersInvitedToChatroomByPage(chatroomId,page,defaultPageSize);
+            return ResponseEntity.ok(users.map(DTOMapper::toUserDTO));
         }else if(!checkOwner){
-            return ResponseEntity.status(403).body(new ArrayList<>());
+            return ResponseEntity.status(403).body(Page.empty());
         }
-        return ResponseEntity.status(401).body(new ArrayList<>());
+        return ResponseEntity.status(401).body(Page.empty());
     }
 
     @GetMapping("/user/chatrooms/{chatroomId}/users/non-invited")
-    public ResponseEntity<List<UserDTO>> getUsersNotInvited(@PathVariable long chatroomId){
+    public ResponseEntity<Page<UserDTO>> getUsersNotInvitedOfPage(@PathVariable long chatroomId, @RequestParam(defaultValue="0")int page){
         boolean checkOwner = chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),chatroomId);
         if(userService.checkUserLoginStatus() && checkOwner){
-            List<User> users = chatroomService.getUsersNotInvitedToChatroom(chatroomId);
-            return ResponseEntity.ok(
-                    users.stream().map(DTOMapper::toUserDTO).collect(Collectors.toList())
-            );
+            Page<User> users = userService.findUsersNotInvitedToChatroomByPage(chatroomId,page,defaultPageSize);
+            return ResponseEntity.ok(users.map(DTOMapper::toUserDTO));
         }else if(!checkOwner){
-            return ResponseEntity.status(403).body(new ArrayList<>());
+            return ResponseEntity.status(403).body(Page.empty());
         }
-        return ResponseEntity.status(401).body(new ArrayList<>());
+        return ResponseEntity.status(401).body(Page.empty());
     }
 
     @GetMapping("/user/chatrooms/{chatroomId}/users/owner")

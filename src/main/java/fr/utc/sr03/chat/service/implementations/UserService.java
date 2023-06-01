@@ -7,6 +7,10 @@ import fr.utc.sr03.chat.model.User;
 import fr.utc.sr03.chat.service.interfaces.UserServiceInt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,9 +40,16 @@ public class UserService implements UserServiceInt {
     @Autowired
     private ResetPasswordValidateRespository resetPasswordValidateRespository;
 
+    /*
     @Override
     public List<User> findAllUsers() {
         return userRepository.findAll();
+    }
+    */
+    @Override
+    public Page<User> findAllUsersByPage(int page, int size) {
+        Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
+        return userRepository.findAll(pageable);
     }
 
     @Override
@@ -59,9 +70,34 @@ public class UserService implements UserServiceInt {
         return true;
     }
 
+    /*
     @Override
     public List<User> findAllUsersNotAdmin() {
         return userRepository.findByAdmin(false);
+    }
+    */
+    @Override
+    public Page<User> findAllUsersNotAdminByPage(int page, int size){
+        Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
+        return userRepository.findByAdmin(false,pageable);
+    }
+
+    @Override
+    public Page<User> findAllOtherUsersNotAdminByPage(int page, int size, long userId){
+        Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
+        return userRepository.findAllOtherUsersNotAdminByPage(userId,pageable);
+    }
+
+    @Override
+    public Page<User> findUsersInvitedToChatroomByPage(long chatroomId, int page, int size) {
+        Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
+        return userRepository.findUsersInvitedToChatroomByPage(chatroomId,pageable);
+    }
+
+    @Override
+    public Page<User> findUsersNotInvitedToChatroomByPage(long chatroomId, int page, int size) {
+        Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
+        return userRepository.findUsersNotInvitedToChatroomByPage(chatroomId,pageable);
     }
 
     @Transactional
@@ -71,9 +107,16 @@ public class UserService implements UserServiceInt {
         userRepository.delete(user);
     }
 
+    /*
     @Override
     public List<User> findAllInactiveUsers() {
         return userRepository.findByActive(false);
+    }
+    */
+    @Override
+    public Page<User> findAllInactiveUsersByPage(int page, int size) {
+        Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
+        return userRepository.findByActive(false,pageable);
     }
 
     @Transactional

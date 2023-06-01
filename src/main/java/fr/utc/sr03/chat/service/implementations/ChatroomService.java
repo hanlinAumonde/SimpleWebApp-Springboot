@@ -12,6 +12,10 @@ import fr.utc.sr03.chat.service.utils.UserDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,6 +84,7 @@ public class ChatroomService implements ChatroomServiceInt {
         }
     }
 
+    /*
     @Transactional(readOnly = true)
     @Override
     public List<Chatroom> getChatroomsOwnedOrJoinedByUser(long userId, boolean isOwner) {
@@ -94,7 +99,16 @@ public class ChatroomService implements ChatroomServiceInt {
         }
         return Chatrooms;
     }
+    */
 
+    @Transactional(readOnly = true)
+    @Override
+    public Page<Chatroom> getChatroomsOwnedOrJoinedOfUserByPage(long userId, boolean isOwner, int page, int size) {
+        Pageable pageable = PageRequest.of(page,size, Sort.sort(Chatroom.class).by(Chatroom::getTitre).ascending());
+        return chatRoomRepository.findChatroomsOwnedOrJoinedOfUserByPage(userId,isOwner,pageable);
+    }
+
+    /*
     @Transactional(readOnly = true)
     @Override
     public List<User> getUsersInvitedToChatroom(long chatroomId) {
@@ -107,7 +121,6 @@ public class ChatroomService implements ChatroomServiceInt {
         }
         return usersInvited;
     }
-
     @Transactional(readOnly = true)
     @Override
     public List<User> getUsersNotInvitedToChatroom(long chatroomId){
@@ -121,6 +134,8 @@ public class ChatroomService implements ChatroomServiceInt {
                 user -> !idOfUsersInvited.contains(user.getId())
         ).collect(Collectors.toList());
     }
+    */
+
 
     @Transactional(readOnly = true)
     @Override
