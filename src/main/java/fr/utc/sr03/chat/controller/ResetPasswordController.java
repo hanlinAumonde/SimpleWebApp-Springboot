@@ -41,7 +41,7 @@ public class ResetPasswordController {
      * Elle envoie un mail de réinitialisation de mot de passe à l'adresse mail saisie si l'adresse mail est valide
      */
     @PostMapping(value = "/forget-password")
-    public String postForgetPasswordPage(@RequestParam(value = "mail") String email, Model model, HttpServletRequest request, RedirectAttributes redirectAttributes){
+    public String postForgetPasswordPage(@RequestParam(value = "mail") String email, HttpServletRequest request, RedirectAttributes redirectAttributes){
         Optional<User> userFound = userService.findUserByEmail(email);
         if(userFound.isPresent()){
             User user = userFound.get();
@@ -83,7 +83,7 @@ public class ResetPasswordController {
      * Elle réinitialise le mot de passe de l'utilisateur si le lien de réinitialisation de mot de passe est valide et non expiré
      */
     @PutMapping(value = "/reset-password-form")
-    public String updateNewPassword(@RequestParam(value = "token")String token, @RequestParam(value = "new_password") String password, Model model, RedirectAttributes redirectAttributes){
+    public String updateNewPassword(@RequestParam(value = "token")String token, @RequestParam(value = "new_password") String password, RedirectAttributes redirectAttributes){
         Optional<ResetPasswordValidate> resetPasswordValidate = resetPasswordValidateService.findValidateByToken(token);
         if (resetPasswordValidate.isPresent()){
             if(resetPasswordValidate.get().isExpired()){

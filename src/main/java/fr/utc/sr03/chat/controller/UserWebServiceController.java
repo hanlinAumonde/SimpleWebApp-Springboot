@@ -22,8 +22,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-import javax.websocket.SessionException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +33,7 @@ public class UserWebServiceController {
 
     private final Logger logger = LoggerFactory.getLogger(UserWebServiceController.class);
 
+    //le nombre de chatrooms par page défault
     private static final int defaultPageSize = 5;
 
     @Resource
@@ -46,6 +45,12 @@ public class UserWebServiceController {
     @Resource
     private UserChatroomRelationService userChatroomRelationService;
 
+    //Pour tous les méthodes ici, on va d'abord vérifier si l'utilisateur est connecté,
+    //sinon on va retourner un code 401 (non autorisé), ce qui va permettre au front-end de rediriger l'utilisateur vers la page de login
+
+    /**
+     * Cette méthode permet d'obtenir le les informations de l'utilisateur connecté
+     */
     @GetMapping("/users/logged")
     public ResponseEntity<UserDTO> getLoggedUser(HttpServletRequest request){
         if (userService.checkUserLoginStatus()) {
@@ -64,6 +69,10 @@ public class UserWebServiceController {
         return ResponseEntity.status(401).body(new UserDTO());
     }
 
+    /**
+     * Cette méthode permet d'obtenir tous les informations des autres utilisateurs sauf l'utilisateur connecté
+     * Elle va etre utilisée dans le processus du planificateur de chatroom (inviter des utilisateurs)
+     */
     @GetMapping("/user/users/other")
     public ResponseEntity<Page<UserDTO>> getOtherUsers(@RequestParam(defaultValue ="0")int page){
         if(userService.checkUserLoginStatus()){
@@ -73,6 +82,10 @@ public class UserWebServiceController {
         return ResponseEntity.status(401).body(Page.empty());
     }
 
+    /**
+     * Cettet méthode permet créer une chatroom
+     * Si une chatroom existe déjà (ou il y a des informations conflicts que les chatrooms existantes), on va retourner un code 409 (conflit)
+     */
     @PostMapping("/user/chatrooms/")
     public ResponseEntity<ChatroomDTO> createChatroom(@RequestBody ChatroomRequestDTO chatroomRequestDTO){
         if(userService.checkUserLoginStatus()){
@@ -87,6 +100,9 @@ public class UserWebServiceController {
         return ResponseEntity.status(401).body(new ChatroomDTO());
     }
 
+    /**
+     * Cette méthode permet d'obtenir tous les chatrooms créés par l'utilisateur connecté
+     */
     @GetMapping("/user/users/{userId}/chatrooms/owned")
     public ResponseEntity<Page<ChatroomDTO>> getChatroomsOwnedOfPage(@PathVariable long userId, @RequestParam(defaultValue = "0")int page){
         if(userService.checkUserLoginStatus() && userId == userService.getLoggedUser().getId()){
@@ -96,6 +112,9 @@ public class UserWebServiceController {
         return ResponseEntity.status(401).body(Page.empty());
     }
 
+    /**
+     * Cette méthode permet d'obtenir tous les chatrooms auxquels l'utilisateur connecté a participé
+     */
     @GetMapping("/user/users/{userId}/chatrooms/joined")
     public ResponseEntity<Page<ChatroomDTO>> getChatroomsJoinedOfPage(@PathVariable long userId, @RequestParam(defaultValue = "0")int page){
         if(userService.checkUserLoginStatus() && userId == userService.getLoggedUser().getId()){
@@ -105,6 +124,13 @@ public class UserWebServiceController {
         return ResponseEntity.status(401).body(Page.empty());
     }
 
+    /**
+     * Cette méthode permet d'obtenir tous les utilisateurs invités à une chatroom
+     * Elle va etre utilisée dans le processus du modification de chatroom (uninviter des utilisateurs)
+     * Comme seulement le propriétaire de la chatroom peut uninviter des utilisateurs,
+     * on va vérifier si l'utilisateur connecté est le propriétaire de la chatroom
+     * Si oui, on va retourner les utilisateurs invités à cette chatroom, sinon on va retourner un code 403 (interdit)
+     */
     @GetMapping("/user/chatrooms/{chatroomId}/users/invited")
     public ResponseEntity<Page<UserDTO>> getUsersInvitedOfPage(@PathVariable long chatroomId, @RequestParam(defaultValue="0")int page){
         boolean checkOwner = chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),chatroomId);
@@ -117,6 +143,13 @@ public class UserWebServiceController {
         return ResponseEntity.status(401).body(Page.empty());
     }
 
+    /**
+     * Cette méthode permet d'obtenir tous les utilisateurs non invités à une chatroom
+     * Elle va etre utilisée dans le processus du modification de chatroom (inviter des utilisateurs)
+     * Comme seulement le propriétaire de la chatroom peut inviter des utilisateurs,
+     * on va vérifier si l'utilisateur connecté est le propriétaire de la chatroom
+     * Si oui, on va retourner les utilisateurs non invités, sinon on va retourner un code 403 (interdit)
+     */
     @GetMapping("/user/chatrooms/{chatroomId}/users/non-invited")
     public ResponseEntity<Page<UserDTO>> getUsersNotInvitedOfPage(@PathVariable long chatroomId, @RequestParam(defaultValue="0")int page){
         boolean checkOwner = chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),chatroomId);
@@ -129,6 +162,9 @@ public class UserWebServiceController {
         return ResponseEntity.status(401).body(Page.empty());
     }
 
+    /**
+     * Cette méthode permet d'obtenir le propriétaire d'une chatroom
+     */
     @GetMapping("/user/chatrooms/{chatroomId}/users/owner")
     public ResponseEntity<UserDTO> getOwner(@PathVariable long chatroomId){
         if(userService.checkUserLoginStatus()){
@@ -142,10 +178,13 @@ public class UserWebServiceController {
         return ResponseEntity.status(401).body(new UserDTO());
     }
 
+    /**
+     * Cette méthode permet de supprimer une chatroom
+     * Si il y a des conflits pendant la suppression, on va retourner un code 409 (conflit)
+     */
     @DeleteMapping("/user/chatrooms/{chatroomId}")
     public ResponseEntity<Boolean> deleteChatroom(@PathVariable long chatroomId){
         if(userService.checkUserLoginStatus()){
-            User user = userService.getLoggedUser();
             if(chatroomService.deleteChatRoom(chatroomId)){
                 return ResponseEntity.ok(true);
             }else{
@@ -155,6 +194,10 @@ public class UserWebServiceController {
         return ResponseEntity.status(401).body(false);
     }
 
+    /**
+     * Cette méthode permet de modifier une chatroom en invitant un utilisateur
+     * Si il y a des conflits pendant la modification, on va retourner un code 409 (conflit)
+     */
     @PostMapping("/user/chatrooms/{chatroomId}/users/invited/")
     public ResponseEntity<Boolean> addUserInvited(@PathVariable long chatroomId, @RequestBody UserDTO userDTO){
         if(userService.checkUserLoginStatus()){
@@ -168,6 +211,10 @@ public class UserWebServiceController {
         return ResponseEntity.status(401).body(false);
     }
 
+    /**
+     * Cette méthode permet de modifier une chatroom en uninvitant un utilisateur
+     * Si il y a des conflits pendant la modification, on va retourner un code 409 (conflit)
+     */
     @DeleteMapping("/user/chatrooms/{chatroomId}/users/invited/{userId}")
     public ResponseEntity<Boolean> deleteUserInvited(@PathVariable long chatroomId, @PathVariable long userId){
         if(userService.checkUserLoginStatus()){
@@ -180,6 +227,10 @@ public class UserWebServiceController {
         return ResponseEntity.status(401).body(false);
     }
 
+    /**
+     * Cette méthode permet d'obtenir les informations d'une chatroom
+     * Si le chatroom n'existe pas, on va retourner un code 404 (non trouvé)
+     */
     @GetMapping("/user/chatrooms/{chatroomId}")
     public ResponseEntity<ChatroomDTO> getChatroom(@PathVariable long chatroomId){
         if(userService.checkUserLoginStatus()){
@@ -190,6 +241,11 @@ public class UserWebServiceController {
         return ResponseEntity.status(401).body(new ChatroomDTO());
     }
 
+    /**
+     * Cette méthode permet de modifier une chatroom avec tous les informations modifiées
+     * Si il y a des conflits pendant la modification, on va retourner un code 409 (conflit)
+     * Si l'utilisateur connecté n'est pas le propriétaire de la chatroom, on va retourner un code 403 (interdit)
+     */
     @PutMapping("/user/chatrooms/{chatroomId}")
     public ResponseEntity<Boolean> updateChatroom(@PathVariable long chatroomId,@RequestBody ChatroomRequestDTO chatroomRequestDTO){
         boolean checkOwner = chatroomService.checkUserIsOwnerOfChatroom(chatroomId, userService.getLoggedUser().getId());
@@ -205,6 +261,12 @@ public class UserWebServiceController {
         return ResponseEntity.status(401).body(false);
     }
 
+    /**
+     * Cette méthode permet d'obtenir le status d'une chatroom
+     * Si un utilisateur est désactivé(compte locké), les chatroom créés par cet utilisateur seront désactivés également
+     * Donc si une autre utilisateur qui est invité à cette chatroom, il ne peut pas accéder à cette chatroom avec un status désactivé
+     * Dans le FrontEnd, le button pour accéder à cette chatroom sera désactivé
+     */
     @GetMapping("/user/chatrooms/{chatroomId}/status")
     public ResponseEntity<Boolean> getChatroomStatus(@PathVariable long chatroomId){
         if(userService.checkUserLoginStatus()){
@@ -215,6 +277,10 @@ public class UserWebServiceController {
         return ResponseEntity.status(401).body(false);
     }
 
+    /**
+     * Cette méthode permet d'obtenir tous les utilisateurs dans une chatroom
+     * Elle va etre utilisé dans la page de chatroom pour afficher tous les utilisateurs dans cette chatroom
+     */
     @GetMapping("/user/chatrooms/{chatroomId}/users")
     public ResponseEntity<List<UserDTO>> getAllUsersInChatroom(@PathVariable long chatroomId){
         if(userService.checkUserLoginStatus()){

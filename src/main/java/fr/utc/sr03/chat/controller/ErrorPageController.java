@@ -12,6 +12,9 @@ import javax.servlet.http.HttpSession;
 @Controller
 @RequestMapping(value="/errorPage")
 public class ErrorPageController {
+    /**
+     * Cette méthode permet d'obtenir la page d'erreur
+     */
     @GetMapping(value="/{code}")
     public String getErrorPage(@PathVariable int code, HttpServletRequest req, Model model){
         HttpSession session = req.getSession();

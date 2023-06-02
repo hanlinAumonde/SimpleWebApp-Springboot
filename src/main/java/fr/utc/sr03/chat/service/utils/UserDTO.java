@@ -1,5 +1,8 @@
 package fr.utc.sr03.chat.service.utils;
 
+/**
+ * Cette classe permet de représenter un utilisateur avec moins d'informations que la classe User(pas de mdp)
+ */
 public class UserDTO {
     public long id;
     public String lastName;

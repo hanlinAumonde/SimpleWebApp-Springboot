@@ -29,7 +29,7 @@ aside {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    box-shadow: -5px 0px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: -5px 0 5px rgba(0, 0, 0, 0.2);
     padding: 20px;
     height: 100%;
     width:100%;
@@ -88,4 +88,10 @@ footer {
 .a-right{
     grid-column-start:3;
     grid-column-end: 4;
+}
+
+.table{
+    border: 5px solid #ccc;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);;
 }

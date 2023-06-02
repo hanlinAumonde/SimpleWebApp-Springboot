@@ -40,23 +40,27 @@ public class UserService implements UserServiceInt {
     @Autowired
     private ResetPasswordValidateRespository resetPasswordValidateRespository;
 
-    /*
-    @Override
-    public List<User> findAllUsers() {
-        return userRepository.findAll();
-    }
-    */
+    /**
+     * Cette méthode permet de trouver tous les utilisateurs en page
+     */
     @Override
     public Page<User> findAllUsersByPage(int page, int size) {
         Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
         return userRepository.findAll(pageable);
     }
 
+    /**
+     * Cette méthode permet de récupérer un utilisateur connecté
+     */
     @Override
     public User getLoggedUser() {
         return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
+    /**
+     * Cette méthode permet d'ajouter un utilisateur
+     * Si l'utilisateur existe déjà, on retourne false, sinon on l'ajoute et on retourne true
+     */
     @Override
     public boolean addUser(User user) {
         List<User> users = userRepository.findAll();
@@ -70,36 +74,47 @@ public class UserService implements UserServiceInt {
         return true;
     }
 
-    /*
-    @Override
-    public List<User> findAllUsersNotAdmin() {
-        return userRepository.findByAdmin(false);
-    }
-    */
+    /**
+     * Cette méthode permet de trouver les utilisateurs qui ne sont pas administrateurs
+     * Elle est utilisée dans la page d'administration - suppression d'un utilisateur
+     */
     @Override
     public Page<User> findAllUsersNotAdminByPage(int page, int size){
         Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
         return userRepository.findByAdmin(false,pageable);
     }
 
+    /**
+     * Cette méthode permet de trouver les utilisateurs qui ne sont pas administrateurs et qui ne sont pas l'utilisateur connecté
+     * Elle est utilisée dans la page User pour donner l'utilisateur une liste des utilisateurs qu'il peut ajouter à un chatroom
+     */
     @Override
     public Page<User> findAllOtherUsersNotAdminByPage(int page, int size, long userId){
         Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
         return userRepository.findAllOtherUsersNotAdminByPage(userId,pageable);
     }
 
+    /**
+     * Cette méthode permet de trouver les utilisateurs invités à un chatroom
+     */
     @Override
     public Page<User> findUsersInvitedToChatroomByPage(long chatroomId, int page, int size) {
         Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
         return userRepository.findUsersInvitedToChatroomByPage(chatroomId,pageable);
     }
 
+    /**
+     * Cette méthode permet de trouver les utilisateurs qui ne sont pas invités à un chatroom
+     */
     @Override
     public Page<User> findUsersNotInvitedToChatroomByPage(long chatroomId, int page, int size) {
         Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
         return userRepository.findUsersNotInvitedToChatroomByPage(chatroomId,pageable);
     }
 
+    /**
+     * Cette méthode permet de supprimer un utilisateur
+     */
     @Transactional
     @Override
     public void deleteUserById(Long id) {
@@ -107,30 +122,36 @@ public class UserService implements UserServiceInt {
         userRepository.delete(user);
     }
 
-    /*
-    @Override
-    public List<User> findAllInactiveUsers() {
-        return userRepository.findByActive(false);
-    }
-    */
+    /**
+     * Cette méthode permet de trouver tous les utilisateurs désactivés
+     */
     @Override
     public Page<User> findAllInactiveUsersByPage(int page, int size) {
         Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
         return userRepository.findByActive(false,pageable);
     }
 
+    /**
+     * Cette méthode permet de mise à jour le statut d'un utilisateur
+     */
     @Transactional
     @Override
     public void setStatusOfUser(long userId,boolean status) {
         userRepository.updateActive(userId,status);
     }
 
+    /**
+     * Cette méthode permet de mise à jour le nombre d'essais de connexion d'un utilisateur
+     */
     @Transactional
     @Override
     public void setFailedAttemptsOfUser(long userId, int failedAttempts) {
         userRepository.updateFailedAttempts(userId,failedAttempts);
     }
 
+    /**
+     * Cette méthode permet de bloquer un utilisateur et de réinitialiser le nombre d'essais de connexion
+     */
     @Transactional
     @Override
     public void lockUserAndResetFailedAttempts(long userId) {
@@ -138,21 +159,33 @@ public class UserService implements UserServiceInt {
         userRepository.updateFailedAttempts(userId,0);
     }
 
+    /**
+     * Cette méthode permet de trouver un utilisateur par son email
+     */
     @Override
     public Optional<User> findUserByEmail(String email) {
         return userRepository.findByMail(email);
     }
 
+    /**
+     * Cette méthode permet de trouver un utilisateur par son id
+     */
     @Override
     public Optional<User> findUserById(long userId) {
         return userRepository.findById(userId);
     }
 
+    /**
+     * Cette méthode permet de trouver un utilisateur qui est administrateur ou non
+     */
     @Override
     public Optional<User> findUserOrAdmin(String email, boolean isAdmin) {
         return userRepository.findByMailAndAdmin(email, isAdmin);
     }
 
+    /**
+     * Cette méthode permet de construire un email de réinitialisation de mot de passe et de l'envoyer à l'utilisateur
+     */
     @Override
     public void sendResetPasswordEmail(User user, HttpServletRequest request) {
         String token = UUID.randomUUID().toString();
@@ -170,12 +203,18 @@ public class UserService implements UserServiceInt {
         emailService.sendSimpleMessage(user.getMail(), subject, content);
     }
 
+    /**
+     * Cette méthode permet de réinitialiser le mot de passe d'un utilisateur
+     */
     @Transactional
     @Override
     public void resetPassword(User user, String password) {
         userRepository.updatePwd(user.getId(), passwordEncoder.encode(password));
     }
 
+    /**
+     * Cette méthode permet de vérifier si un utilisateur est encore connecté
+     */
     @Override
     public boolean checkUserLoginStatus() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

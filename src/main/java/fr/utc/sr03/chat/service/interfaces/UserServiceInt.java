@@ -13,12 +13,10 @@ import java.util.Optional;
 public interface UserServiceInt {
 
     User getLoggedUser();
-    //List<User> findAllUsers();
     Page<User> findAllUsersByPage(int page, int size);
 
     boolean addUser(User user);
 
-    //List<User> findAllUsersNotAdmin();
     Page<User> findAllUsersNotAdminByPage(int page, int size);
 
     Page<User> findAllOtherUsersNotAdminByPage(int page, int size, long userId);
@@ -29,7 +27,6 @@ public interface UserServiceInt {
 
     void deleteUserById(Long id);
 
-    //List<User> findAllInactiveUsers();
     Page<User> findAllInactiveUsersByPage(int page, int size);
 
     void setStatusOfUser(long userId,boolean status);

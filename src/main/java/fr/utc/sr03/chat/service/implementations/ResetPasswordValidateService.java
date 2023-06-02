@@ -13,11 +13,17 @@ public class ResetPasswordValidateService implements ResetPasswordValidateServic
 
     @Autowired
     private ResetPasswordValidateRespository resetPasswordValidateRespository;
+    /**
+     * Cette méthode permet de trouver le validate correspondant au token passé en paramètre
+     */
     @Override
     public Optional<ResetPasswordValidate> findValidateByToken(String token) {
         return resetPasswordValidateRespository.findByToken(token);
     }
 
+    /**
+     * Cette méthode permet de suppimer un validate après avoir changé le mot de passe
+     */
     @Override
     public void deleteValidate(ResetPasswordValidate resetPasswordValidate) {
         resetPasswordValidateRespository.delete(resetPasswordValidate);

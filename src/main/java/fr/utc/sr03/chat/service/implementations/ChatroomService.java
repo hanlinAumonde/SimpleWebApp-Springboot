@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class ChatroomService implements ChatroomServiceInt {
@@ -39,11 +38,18 @@ public class ChatroomService implements ChatroomServiceInt {
     @Autowired
     private UserChatroomRelationRepository userChatroomRelationRepository;
 
+    /**
+     * Cette méthode permet de trouver le chatroom correspondant à l'id passé en paramètre
+     */
     @Override
     public Optional<Chatroom> findChatroom(long chatroomId) {
         return chatRoomRepository.findById(chatroomId);
     }
 
+    /**
+     * Cette méthode permet de créer un chatroom,
+     * si il y a des conflits avec un chatroom existant, on retourne un chatroom vide et affichier un message d'erreur
+     */
     @Transactional
     @Override
     public Chatroom createChatroom(ChatroomRequestDTO chatroomRequestDTO, long userId) {
@@ -84,23 +90,9 @@ public class ChatroomService implements ChatroomServiceInt {
         }
     }
 
-    /*
-    @Transactional(readOnly = true)
-    @Override
-    public List<Chatroom> getChatroomsOwnedOrJoinedByUser(long userId, boolean isOwner) {
-        List<Chatroom> Chatrooms = new ArrayList<>();
-        List<UserChatroomRelation> ChatroomsOwnedOrJoined = userChatroomRelationRepository.findByUserIdAndOwned(userId, isOwner);
-        for(UserChatroomRelation owned : ChatroomsOwnedOrJoined){
-            Chatroom ChatroomTemp = chatRoomRepository.findById(owned.getChatroomId()).get();
-            LocalDateTime currentDate = LocalDateTime.now();
-            if(ChatroomTemp.getHoraireTermine().isAfter(currentDate)){
-                Chatrooms.add(ChatroomTemp);
-            }
-        }
-        return Chatrooms;
-    }
-    */
-
+    /**
+     * Cette méthode permet de trouver les chatrooms crées/joints par un utilisateur en Page(size = 5)
+     */
     @Transactional(readOnly = true)
     @Override
     public Page<Chatroom> getChatroomsOwnedOrJoinedOfUserByPage(long userId, boolean isOwner, int page, int size) {
@@ -108,35 +100,9 @@ public class ChatroomService implements ChatroomServiceInt {
         return chatRoomRepository.findChatroomsOwnedOrJoinedOfUserByPage(userId,isOwner,pageable);
     }
 
-    /*
-    @Transactional(readOnly = true)
-    @Override
-    public List<User> getUsersInvitedToChatroom(long chatroomId) {
-        List<User> usersInvited = new ArrayList<>();
-        List<UserChatroomRelation> usersInvitedRelation = userChatroomRelationService.findUsersInvitedToChatroom(chatroomId);
-        for(UserChatroomRelation userInvited : usersInvitedRelation){
-            usersInvited.add(
-                   userRepository.findById(userInvited.getUserId()).get()
-            );
-        }
-        return usersInvited;
-    }
-    @Transactional(readOnly = true)
-    @Override
-    public List<User> getUsersNotInvitedToChatroom(long chatroomId){
-        List<User> allUsers = userRepository.findByAdmin(false);
-        List<User> usersInvited = new ArrayList<>();
-        for(UserChatroomRelation user : userChatroomRelationRepository.findByChatroomId(chatroomId)){
-            usersInvited.add(userRepository.findById(user.getUserId()).get());
-        }
-        Set<Long> idOfUsersInvited = usersInvited.stream().map(User::getId).collect(Collectors.toSet());
-        return allUsers.stream().filter(
-                user -> !idOfUsersInvited.contains(user.getId())
-        ).collect(Collectors.toList());
-    }
-    */
-
-
+    /**
+     * Cette méthode permet de trouver les chatrooms crées/joints par un utilisateur
+     */
     @Transactional(readOnly = true)
     @Override
     public List<User> getAllUsersInChatroom(long chatroomId){
@@ -147,6 +113,9 @@ public class ChatroomService implements ChatroomServiceInt {
         return allUsersInChatroom;
     }
 
+    /**
+     * Cette méthode permet de supprimer un chatroom
+     */
     @Transactional
     @Override
     public boolean deleteChatRoom(long chatroomId) {
@@ -160,12 +129,18 @@ public class ChatroomService implements ChatroomServiceInt {
         }
     }
 
+    /**
+     * Cette méthode permet de changer le status d'un chatroom
+     */
     @Transactional
     @Override
     public void setStatusOfChatroom(long chatroomId, boolean status) {
         chatRoomRepository.findById(chatroomId).ifPresent(chatroom -> chatRoomRepository.updateActive(chatroom.getId(), status));
     }
 
+    /**
+     * Cette méthode permet de uninivter un utilisateur d'un chatroom
+     */
     @Transactional
     @Override
     public boolean deleteUserInvited(long chatroomId, long userId){
@@ -180,6 +155,9 @@ public class ChatroomService implements ChatroomServiceInt {
         }
     }
 
+    /**
+     * Cette méthode permet de mettre à jour un chatroom
+     */
     @Transactional
     @Override
     public boolean updateChatroom(ChatroomRequestDTO chatroomRequestDTO, long chatroomId) {
@@ -217,6 +195,9 @@ public class ChatroomService implements ChatroomServiceInt {
         }
     }
 
+    /**
+     * Cette méthode permet de vérifier si un utilisateur est propriétaire d'un chatroom
+     */
     @Override
     public boolean checkUserIsOwnerOfChatroom(long userId, long chatroomId) {
         try {

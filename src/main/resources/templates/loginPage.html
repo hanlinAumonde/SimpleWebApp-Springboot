@@ -9,14 +9,14 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/general.css}"/>
 </head>
-<body>
+<body style="background-color: azure">
 <header class="text-white py-3">
     <div class="container">
         <h1 class="mb-0">SR03 Chat Application</h1>
     </div>
 </header>
 <div class="container">
-    <form action="#" th:action="@{/check}" th:object="${user}" method="POST" class="mt-5">
+    <form action="#" th:action="@{/check}" th:object="${user}" method="POST" class="mt-5 bg-white">
         <h3>Login : </h3>
         <div class="form-group">
             <label for="username">Mail : </label>

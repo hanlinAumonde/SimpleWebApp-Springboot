@@ -14,10 +14,12 @@ public interface ChatroomRepository extends JpaRepository<Chatroom, Long> {
     Optional<Chatroom> findById(long chatroomId);
     Optional<Chatroom> findByTitreAndDescriptionAndHoraireCommenceAndHoraireTermine(String titre, String description, LocalDateTime horaireCommence, LocalDateTime horaireTermine);
 
+    //Cette méthode permet de mise à jour le statut d'une chatroom
     @Modifying
     @Query("update Chatroom c set c.active = ?2 where c.id = ?1")
     void updateActive(long chatroomId, boolean status);
 
+    //Cette méthode permet de trouver tous les chatrooms créés/ouverts par un utilisateur, le chatroom doit être non expiré
     @Query("select c from Chatroom c, UserChatroomRelation r where c.horaireTermine >= CURRENT_TIMESTAMP and c.id = r.chatroomId and r.userId = ?1 and r.owned = ?2")
     Page<Chatroom> findChatroomsOwnedOrJoinedOfUserByPage(long userId, boolean isOwner, Pageable pageable);
 }

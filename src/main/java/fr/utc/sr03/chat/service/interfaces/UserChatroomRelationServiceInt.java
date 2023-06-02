@@ -12,8 +12,6 @@ public interface UserChatroomRelationServiceInt{
 
     void addRelation(long userId, long chatroomId , boolean isOwned);
 
-    List<UserChatroomRelation> findUsersInvitedToChatroom(long chatroomId);
-
     Optional<UserChatroomRelation> findOwnerOfChatroom(long chatroomId);
 
     void deleteRelation(UserChatroomRelation relation);

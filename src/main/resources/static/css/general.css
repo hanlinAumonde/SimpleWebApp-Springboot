@@ -6,6 +6,7 @@ html {
 body {
     display: flex;
     flex-direction: column;
+    background-color: azure;
     height: 100%;
 }
 
@@ -42,4 +43,10 @@ footer {
     background-color: #0056b3;
     text-align: center;
     padding: 10px;
+}
+
+.table{
+    border: 5px solid #ccc;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);;
 }

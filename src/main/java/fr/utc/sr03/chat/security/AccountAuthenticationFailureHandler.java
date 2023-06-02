@@ -10,7 +10,7 @@ import java.io.IOException;
 public class AccountAuthenticationFailureHandler implements AuthenticationFailureHandler {
 
     /**
-     * Redirect vers la page de login
+     * Redirect vers la page de login, avec un message d'erreur
      */
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,

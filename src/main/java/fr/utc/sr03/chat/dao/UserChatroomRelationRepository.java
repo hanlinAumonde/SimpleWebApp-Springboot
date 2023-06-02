@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserChatroomRelationRepository extends JpaRepository<UserChatroomRelation,Long> {
-    List<UserChatroomRelation> findByUserIdAndOwned(long userId, boolean isOwned);
 
     List<UserChatroomRelation> findByUserId(long userId);
 

@@ -20,6 +20,7 @@ import java.util.List;
 @RequestMapping(value="/admin")
 public class AdminController {
 
+    //le nombre de chatrooms par page défault
     private static final int defaultPageSize = 5;
     @Resource
     private UserService userService;
@@ -31,6 +32,7 @@ public class AdminController {
     private UserChatroomRelationService userChatroomRelationService;
 
     //Tous les anootations @AuthenticationPrincipal sont pour récupérer les informations de l'utilisateur connecté
+    //Tous les opération directement sur la base de données sont dans les services correspondants,autrement dit on peut pas accéder à la couche DAO directement dans les controllers
 
     /**
      * C'est la page d'accueil de l'admin, elle affiche tous les utilisateurs de la base de données
@@ -87,6 +89,7 @@ public class AdminController {
 
     /**
      * Cette méthode permet de supprimer un utilisateur de la base de données
+     * Elle supprime aussi tous ses relations et ses salons
      */
     @DeleteMapping("/adminSuppressionUser")
     public String deleteUser(@RequestParam("userId") long userId) {
@@ -115,6 +118,7 @@ public class AdminController {
 
     /**
      * Cette méthode permet d'activer un utilisateur
+     * Elle active aussi tous ses salons
      */
     @PutMapping("/adminUserActivation")
     public String activateUser(@RequestParam("userId") long userId) {

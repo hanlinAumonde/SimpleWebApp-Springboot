@@ -38,9 +38,12 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
     @Resource
     private UserChatroomRelationService userChatroomRelationService;
 
-    /*
-      Ce méthode est appelée par le filtre d'authentification pour authentifier l'utilisateur.
-    */
+    /**
+     * Ce méthode est appelée par le filtre d'authentification pour authentifier l'utilisateur.
+     * L'utilisateur est identifié comme admin/user
+     * Si un utilisateur a essayé de se connecter plus de 5 fois sans succès, son compte est bloqué
+     * Et les chatrooms créées par cet utilisateur sont desactivées également
+     */
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         logger.info("Commence l'authentification");

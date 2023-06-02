@@ -89,3 +89,9 @@ footer {
     grid-column-start:3;
     grid-column-end: 4;
 }
+
+.table{
+    border: 5px solid #ccc;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);;
+}

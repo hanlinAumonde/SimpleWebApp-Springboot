@@ -108,6 +108,7 @@ public class User implements UserDetails {
         this.failedAttempts = failedAttempts;
     }
 
+    //Les méthodes ci-dessous sont obligatoires pour l'interface UserDetails
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = new ArrayList<>();

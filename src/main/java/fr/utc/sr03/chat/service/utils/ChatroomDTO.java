@@ -2,6 +2,9 @@ package fr.utc.sr03.chat.service.utils;
 
 import java.util.List;
 
+/**
+ * Cette classe permet de représenter une chatroom avec moins d'informations que la classe Chatroom
+ */
 public class ChatroomDTO {
     public long id;
     public String titre;

@@ -2,6 +2,9 @@ package fr.utc.sr03.chat.service.utils;
 
 import java.util.List;
 
+/**
+ * Cette classe permet de récupérer les informations d'une chatroom depuis le client
+ */
 public class ChatroomRequestDTO {
     public String titre;
     public String description;

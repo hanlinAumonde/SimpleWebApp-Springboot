@@ -99,7 +99,9 @@ public class WebSecurityConfig {
     }
 
 
-    //@Profile("prod")
+    /**
+     * C'est pour activer le WebSocket
+     */
     @Bean
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
     public ServerEndpointExporter serverEndpointExporter() {
