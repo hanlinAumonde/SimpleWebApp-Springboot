@@ -1,9 +1,11 @@
 package fr.utc.sr03.chat.controller;
 
 
+import fr.utc.sr03.chat.model.ResetPasswordValidate;
 import fr.utc.sr03.chat.model.User;
 import fr.utc.sr03.chat.model.UserChatroomRelation;
 import fr.utc.sr03.chat.service.implementations.ChatroomService;
+import fr.utc.sr03.chat.service.implementations.ResetPasswordValidateService;
 import fr.utc.sr03.chat.service.implementations.UserChatroomRelationService;
 import fr.utc.sr03.chat.service.implementations.UserService;
 import org.springframework.data.domain.Page;
@@ -30,6 +32,9 @@ public class AdminController {
 
     @Resource
     private UserChatroomRelationService userChatroomRelationService;
+
+    @Resource
+    private ResetPasswordValidateService resetPasswordValidateService;
 
     //Tous les anootations @AuthenticationPrincipal sont pour récupérer les informations de l'utilisateur connecté
     //Tous les opération directement sur la base de données sont dans les services correspondants,autrement dit on peut pas accéder à la couche DAO directement dans les controllers
@@ -99,6 +104,10 @@ public class AdminController {
             if(relation.isOwned()) {
                 chatroomService.deleteChatRoom(relation.getChatroomId());
             }
+        }
+        List<ResetPasswordValidate> validatesOfUsers = resetPasswordValidateService.findValidatesByUserId(userId);
+        for(ResetPasswordValidate validate : validatesOfUsers){
+            resetPasswordValidateService.deleteValidate(validate);
         }
         userService.deleteUserById(userId);
         return "redirect:/admin/adminSuppressionUser";

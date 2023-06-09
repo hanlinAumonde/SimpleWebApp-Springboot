@@ -285,7 +285,7 @@ public class UserWebServiceController {
     public ResponseEntity<List<UserDTO>> getAllUsersInChatroom(@PathVariable long chatroomId){
         if(userService.checkUserLoginStatus()){
             List<User> users = chatroomService.getAllUsersInChatroom(chatroomId);
-            if(users.size() > 1) {
+            if(users.size() > 0) {
                 return ResponseEntity.ok(
                         users.stream().map(DTOMapper::toUserDTO).collect(Collectors.toList())
                 );

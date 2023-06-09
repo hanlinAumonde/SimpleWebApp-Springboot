@@ -5,12 +5,12 @@ function validateResetForm() {
     const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,15}$/;
 
     if (newPassword !== confirmPassword) {
-        alert("The passwords do not match.");
+        alert("Les saisies sont différentes, réessayer");
         return false;
     }
 
     if (!passwordPattern.test(newPassword)) {
-        alert("Password must be between 8 and 15 characters long, and contain at least:\n one uppercase letter, \none lowercase letter, \nand one digit.");
+        alert("Le mot de passe doit : \n contenir entre 8 et 15 caractères dont : \nune lettre majuscule, \nune lettre minuscule, \net un chiffre.");
         return false;
     }
     return true;

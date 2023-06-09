@@ -6,6 +6,7 @@ import fr.utc.sr03.chat.service.interfaces.ResetPasswordValidateServiceInt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -19,6 +20,11 @@ public class ResetPasswordValidateService implements ResetPasswordValidateServic
     @Override
     public Optional<ResetPasswordValidate> findValidateByToken(String token) {
         return resetPasswordValidateRespository.findByToken(token);
+    }
+
+    @Override
+    public List<ResetPasswordValidate> findValidatesByUserId(long userId) {
+        return resetPasswordValidateRespository.findByUserId(userId);
     }
 
     /**

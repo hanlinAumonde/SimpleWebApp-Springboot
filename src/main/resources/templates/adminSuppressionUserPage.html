@@ -23,13 +23,13 @@
         <a class="nav-link" th:href="@{/admin/adminAccueil}">Acceuil</a>
       </li>
       <li class="nav-item ml-3">
-        <a class="nav-link" th:href="@{/admin/adminAjoutUser}">ADD a new User</a>
+        <a class="nav-link" th:href="@{/admin/adminAjoutUser}">Ajouter un utilisateur</a>
       </li>
       <li class="nav-item ml-3">
-        <a class="nav-link" th:href="@{/admin/adminUserActivation}">Active a User</a>
+        <a class="nav-link" th:href="@{/admin/adminUserActivation}">Débloquer un utilisateur</a>
       </li>
       <li class="nav-item ml-3">
-        <a class="nav-link" th:href="@{/admin/adminSuppressionUser}">Delete a User</a>
+        <a class="nav-link" th:href="@{/admin/adminSuppressionUser}">Supprimer un utilisateur</a>
       </li>
     </ul>
   </div>
@@ -40,17 +40,17 @@
     <main class="col-lg-9 col-md-9 col-sm-8">
       <div class="row mb-4 ms-2 me-2">
         <div class="col">
-          <h2>Liste des Users / Delete :  </h2>
+          <h2>Liste des utilisateurs supprimable :  </h2>
         </div>
       </div>
       <div class="row ms-4 me-4">
         <table class="table bg-white">
         <thead>
         <tr>
-          <th scope="col">UserFirstname</th>
-          <th scope="col">UserLastName</th>
+          <th scope="col">Prenom</th>
+          <th scope="col">Nom</th>
           <th scope="col">Mail</th>
-          <th scope="col">isActive</th>
+          <th scope="col">Compte actif</th>
           <th scope="col">Operation</th>
         </tr>
         </thead>
@@ -72,21 +72,21 @@
       </table>
       </div>
       <div class="pageNumber">
-        <span class="h5-center" th:text="${'Page number ' + (users.number+1) + ' of ' + users.totalPages + ' pages'}"></span>
+        <span class="h5-center" th:text="${'Page ' + (users.number+1) + ' sur ' + users.totalPages}"></span>
         <a class="a-left" th:if="${users.number}" th:href="@{/admin/adminAccueil(page=${users.number - 1})}">Prev page</a>
         <a class="a-right" th:if="${users.hasNext}" th:href="@{/admin/adminAccueil(page=${users.number + 1})}">Next page</a>
       </div>
     </main>
     <div class="col-lg-3 col-md-3 col-sm-4">
       <aside class="bg-white">
-        <h5>Account admin : </h5>
+        <h5>Compte Administrateur : </h5>
         <ul>
           <li th:text="${admin.getFirstName()}"></li>
-          <li th:text="${admin.getLastName()}">Prenom: </li>
-          <li th:text="${admin.getMail()}">Email: </li>
+          <li th:text="${admin.getLastName()}"></li>
+          <li th:text="${admin.getMail()}"> </li>
         </ul>
         <form th:action="@{/logout}" method="POST">
-          <button class="btn btn-primary" type="submit">Logout</button>
+          <button class="btn btn-primary" type="submit">Déconnexion</button>
         </form>
       </aside>
     </div>

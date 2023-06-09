@@ -15,22 +15,22 @@ function validateForm() {
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
     if (!firstNamePattern.test(firstname)) {
-        alert("FirstName doit contenir que des lettres majuscules.");
+        alert("Le nom doit être écrit en lettre majuscules");
         return false;
     }
 
     if (!lastNamePattern.test(lastname)) {
-        alert("LastName doit contenir d'abord une lettre majuscule et ensuite que des lettres minuscules.");
+        alert("Le premom doit commencer par une lettre majuscule suivi de minuscules.");
         return false;
     }
 
     if (!passwordPattern.test(password)) {
-        alert("Password doit être entre 8 et 15 caractères et doit contenir au moins:\nune lettre majuscule, \nune lettre minuscule, \net un chiffre");
+        alert("Le mot de passe doit : \n contenir entre 8 et 15 caractères dont : \nune lettre majuscule, \nune lettre minuscule, \net un chiffre.");
         return false;
     }
 
     if (!emailPattern.test(email)) {
-        alert("Email doit être de la forme");
+        alert("Email doit être de la forme exemple@mail.dom");
         return false;
     }
 
