@@ -75,6 +75,10 @@ public class Chatroom {
 
     public void setActive(boolean active) { this.active = active; }
 
+    public boolean hasNotStarted() {
+        return LocalDateTime.now().isBefore(this.horaireCommence);
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

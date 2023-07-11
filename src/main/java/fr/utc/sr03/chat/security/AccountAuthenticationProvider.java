@@ -57,8 +57,8 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
         Optional<User> account;
 
         if (admin.isEmpty() && user.isEmpty()) {
-            logger.info("Account not found");
-            throw new UsernameNotFoundException("Account not found");
+            logger.info("Identifiants incorrects");
+            throw new UsernameNotFoundException("Identifiants incorrects");
         }else if(admin.isEmpty()) {
             account = user;
         }else{
@@ -66,8 +66,8 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
         }
 
         if(!account.get().isActive()){
-            logger.info("Account is not active");
-            throw new LockedException("Account is locked");
+            logger.info("Compté bloqué");
+            throw new LockedException("Compté bloqué");
         }
 
         Collection<? extends GrantedAuthority> AUTHORITIES = account.get().getAuthorities();
@@ -91,8 +91,8 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
                 throw new BadCredentialsException("Trops de tentatives malveillantes, votre compte est blouqé");
             }
             userService.setFailedAttemptsOfUser(account.get().getId(),attempts);
-            logger.info("Wrong Password. Account will be locked after " + (MAX_FAILED_ATTEMPTS - attempts) + " more attempts");
-            throw new BadCredentialsException("Wrong Password. Account will be locked after " + (MAX_FAILED_ATTEMPTS - attempts) + " more attempts");
+            logger.info("Mot de passe incorrect. Plus que " + (MAX_FAILED_ATTEMPTS - attempts) + " tentatives avant blocage");
+            throw new BadCredentialsException("Mot de passe incorrect. Plus que " + (MAX_FAILED_ATTEMPTS - attempts) + " tentatives avant blocage");
         }
     }
     @Override

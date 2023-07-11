@@ -29,7 +29,7 @@
                 <a class="nav-link" th:href="@{/admin/adminUserActivation}">Debloquer un utilisateur</a>
             </li>
             <li class="nav-item ml-3">
-                <a class="nav-link" th:href="@{/admin/adminSuppressionUser}">Supprimer un utilisateur</a>
+                <a class="nav-link" th:href="@{/admin/adminSuppressionUser}">Supprimer/Bloquer un utilisateur</a>
             </li>
         </ul>
     </div>
@@ -50,8 +50,8 @@
                     <th scope="col">Prenom</th>
                     <th scope="col">Nom</th>
                     <th scope="col">Mail</th>
-                    <th scope="col">Admin</th>
-                    <th scope="col">Compte actif</th>
+                    <th scope="col">Rôle</th>
+                    <th scope="col">Etat du compte</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -59,8 +59,18 @@
                     <td th:text="${utilisateur.getFirstName()}"></td>
                     <td th:text="${utilisateur.getLastName()}"></td>
                     <td th:text="${utilisateur.getMail()}"></td>
-                    <td th:text="${utilisateur.isAdmin()}"></td>
-                    <td th:text="${utilisateur.isActive()}"></td>
+                    <span th:if="${utilisateur.isAdmin() == true}">
+                        <td th:text="Admin"></td>
+                    </span>
+                    <span th:if="${utilisateur.isAdmin() == false}">
+                        <td th:text="User"></td>
+                    </span>
+                    <span th:if="${utilisateur.isActive() == true}">
+                        <td th:text="Actif"></td>
+                    </span>
+                    <span th:if="${utilisateur.isActive() == false}">
+                        <td th:text="Bloqué"></td>
+                    </span>
                 </tr>
                 </tbody>
             </table>

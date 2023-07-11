@@ -15,12 +15,12 @@ function validateForm() {
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
     if (!firstNamePattern.test(firstname)) {
-        alert("Le nom doit être écrit en lettre majuscules");
+        alert("Le premom doit commencer par une lettre majuscule suivi de minuscules.");
         return false;
     }
 
     if (!lastNamePattern.test(lastname)) {
-        alert("Le premom doit commencer par une lettre majuscule suivi de minuscules.");
+        alert("Le nom doit être écrit en lettres majuscules");
         return false;
     }
 

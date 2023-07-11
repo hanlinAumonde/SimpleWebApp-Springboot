@@ -265,13 +265,19 @@ public class UserWebServiceController {
      * Cette méthode permet d'obtenir le status d'une chatroom
      * Si un utilisateur est désactivé(compte locké), les chatroom créés par cet utilisateur seront désactivés également
      * Donc si une autre utilisateur qui est invité à cette chatroom, il ne peut pas accéder à cette chatroom avec un status désactivé
+     * De plus, si une chatroom n'est pas encore commencée, elle ne sera pas accessible pour tous les utilisateurs aussi
      * Dans le FrontEnd, le button pour accéder à cette chatroom sera désactivé
      */
     @GetMapping("/user/chatrooms/{chatroomId}/status")
     public ResponseEntity<Boolean> getChatroomStatus(@PathVariable long chatroomId){
         if(userService.checkUserLoginStatus()){
             Optional<Chatroom> chatroom = chatroomService.findChatroom(chatroomId);
-            return chatroom.map(value -> ResponseEntity.ok(value.isActive()))
+            return chatroom.map(value -> {
+                         if(value.hasNotStarted())
+                             return ResponseEntity.ok(false);
+                         else
+                             return ResponseEntity.ok(value.isActive());
+                    })
                     .orElseGet(() -> ResponseEntity.status(404).body(false));
         }
         return ResponseEntity.status(401).body(false);

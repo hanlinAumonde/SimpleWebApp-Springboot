@@ -58,9 +58,9 @@ public class AdminController {
     public String getAddUserForm(Model model, @ModelAttribute(value = "msg")String msg , @AuthenticationPrincipal User admin) {
         model.addAttribute("admin",admin);
         model.addAttribute("user", new User());
-        if(msg.equals("User already exists"))
+        if(msg.equals("Compte déjà existant"))
             model.addAttribute("error",msg);
-        else if(msg.equals("User added"))
+        else if(msg.equals("Compte crée !"))
             model.addAttribute("success",msg);
 
         return "adminAjoutUserPage";
@@ -73,9 +73,9 @@ public class AdminController {
     public String addUserToBD(@ModelAttribute User user, RedirectAttributes redirectAttributes) {
         boolean userAdded = userService.addUser(user);
         if (!userAdded){
-            redirectAttributes.addFlashAttribute("msg", "User already exists");
+            redirectAttributes.addFlashAttribute("msg", "Compte déjà existant");
         } else {
-            redirectAttributes.addFlashAttribute("msg","User added");
+            redirectAttributes.addFlashAttribute("msg","Compte crée !");
         }
         return "redirect:/admin/adminAjoutUser";
     }
@@ -141,6 +141,20 @@ public class AdminController {
         }
 
         return "redirect:/admin/adminUserActivation";
+    }
+
+    @PutMapping("/adminSuppressionUser")
+    public String blockUser(@RequestParam("userId") long userId) {
+        userService.setStatusOfUser(userId,false);
+        /*
+         * activer les salons de l'utilisateur
+         */
+        List<UserChatroomRelation> relations = userChatroomRelationService.findRelationsOfUser(userId);
+        for(UserChatroomRelation relation : relations){
+            chatroomService.setStatusOfChatroom(relation.getChatroomId(),false);
+        }
+
+        return "redirect:/admin/adminSuppressionUser";
     }
 }
 

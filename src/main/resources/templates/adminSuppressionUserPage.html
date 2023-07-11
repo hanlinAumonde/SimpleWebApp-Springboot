@@ -29,7 +29,7 @@
         <a class="nav-link" th:href="@{/admin/adminUserActivation}">Débloquer un utilisateur</a>
       </li>
       <li class="nav-item ml-3">
-        <a class="nav-link" th:href="@{/admin/adminSuppressionUser}">Supprimer un utilisateur</a>
+        <a class="nav-link" th:href="@{/admin/adminSuppressionUser}">Supprimer/Bloquer un utilisateur</a>
       </li>
     </ul>
   </div>
@@ -40,7 +40,7 @@
     <main class="col-lg-9 col-md-9 col-sm-8">
       <div class="row mb-4 ms-2 me-2">
         <div class="col">
-          <h2>Liste des utilisateurs supprimable :  </h2>
+          <h2>Liste des utilisateurs :  </h2>
         </div>
       </div>
       <div class="row ms-4 me-4">
@@ -50,7 +50,7 @@
           <th scope="col">Prenom</th>
           <th scope="col">Nom</th>
           <th scope="col">Mail</th>
-          <th scope="col">Compte actif</th>
+          <th scope="col">Etat du compte</th>
           <th scope="col">Operation</th>
         </tr>
         </thead>
@@ -59,13 +59,25 @@
           <td th:text="${utilisateur.getFirstName()}"></td>
           <td th:text="${utilisateur.getLastName()}"></td>
           <td th:text="${utilisateur.getMail()}"></td>
-          <td th:text="${utilisateur.isActive()}"></td>
+          <span th:if="${utilisateur.isActive() == true}">
+                        <td th:text="Actif"></td>
+          </span>
+          <span th:if="${utilisateur.isActive() == false}">
+                        <td th:text="Bloqué"></td>
+          </span>
           <td>
             <form th:action="@{/admin/adminSuppressionUser}" method="POST">
               <input name="_method" type="hidden" value="DELETE">
               <input name="userId" type="hidden" th:value="${utilisateur.getId()}">
               <button class="btn btn-danger" type="submit">Delete</button>
             </form>
+            <span th:if="${utilisateur.isActive() == true}">
+              <form th:action="@{/admin/adminSuppressionUser}" method="POST">
+                <input name="_method" type="hidden" value="PUT">
+                <input name="userId" type="hidden" th:value="${utilisateur.getId()}">
+                <button class="btn btn-danger" type="submit">Bloquer</button>
+              </form>
+             </span>
           </td>
         </tr>
         </tbody>
@@ -73,8 +85,8 @@
       </div>
       <div class="pageNumber">
         <span class="h5-center" th:text="${'Page ' + (users.number+1) + ' sur ' + users.totalPages}"></span>
-        <a class="a-left" th:if="${users.number}" th:href="@{/admin/adminAccueil(page=${users.number - 1})}">Prev page</a>
-        <a class="a-right" th:if="${users.hasNext}" th:href="@{/admin/adminAccueil(page=${users.number + 1})}">Next page</a>
+        <a class="a-left" th:if="${users.number}" th:href="@{/admin/adminSuppressionUser(page=${users.number - 1})}">Page précédente</a>
+        <a class="a-right" th:if="${users.hasNext}" th:href="@{/admin/adminSuppressionUser(page=${users.number + 1})}">Page suivante</a>
       </div>
     </main>
     <div class="col-lg-3 col-md-3 col-sm-4">
