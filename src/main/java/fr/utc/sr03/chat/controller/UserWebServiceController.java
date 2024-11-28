@@ -248,7 +248,7 @@ public class UserWebServiceController {
      */
     @PutMapping("/user/chatrooms/{chatroomId}")
     public ResponseEntity<Boolean> updateChatroom(@PathVariable long chatroomId,@RequestBody ChatroomRequestDTO chatroomRequestDTO){
-        boolean checkOwner = chatroomService.checkUserIsOwnerOfChatroom(chatroomId, userService.getLoggedUser().getId());
+        boolean checkOwner = chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),chatroomId);
         if(userService.checkUserLoginStatus() && checkOwner){
             boolean res = chatroomService.updateChatroom(chatroomRequestDTO, chatroomId);
             if(res)

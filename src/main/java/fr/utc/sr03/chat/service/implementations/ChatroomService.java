@@ -8,10 +8,12 @@ import fr.utc.sr03.chat.model.User;
 import fr.utc.sr03.chat.model.UserChatroomRelation;
 import fr.utc.sr03.chat.service.interfaces.ChatroomServiceInt;
 import fr.utc.sr03.chat.service.utils.ChatroomRequestDTO;
+import fr.utc.sr03.chat.service.utils.RemoveChatroomEvent;
 import fr.utc.sr03.chat.service.utils.UserDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +39,9 @@ public class ChatroomService implements ChatroomServiceInt {
 
     @Autowired
     private UserChatroomRelationRepository userChatroomRelationRepository;
+    
+    @Autowired
+    private ApplicationEventPublisher publisher;
 
     /**
      * Cette méthode permet de trouver le chatroom correspondant à l'id passé en paramètre
@@ -122,6 +127,7 @@ public class ChatroomService implements ChatroomServiceInt {
         try{
             userChatroomRelationRepository.deleteAll(userChatroomRelationRepository.findByChatroomId(chatroomId));
             chatRoomRepository.deleteById(chatroomId);
+            publisher.publishEvent(new RemoveChatroomEvent(chatroomId));
             return true;
         }catch (Exception e){
             logger.error("Error while deleting chatroom with id " + chatroomId + " : " + e.getMessage());

@@ -8,9 +8,14 @@ import fr.utc.sr03.chat.service.implementations.UserService;
 import fr.utc.sr03.chat.service.utils.SpringContext;
 import fr.utc.sr03.chat.service.utils.UserDTO;
 import fr.utc.sr03.chat.service.utils.DTOMapper;
+import fr.utc.sr03.chat.service.utils.RemoveChatroomEvent;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import javax.websocket.*;
 import javax.websocket.server.PathParam;
@@ -140,6 +145,25 @@ public class ChatServer {
         logger.error("Error occurred");
         error.printStackTrace();
     }
+    
+    /*
+     * cette methode surveille l'evenenment de suppression des chatrooms
+     */
+    //@EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void removeEventListener(RemoveChatroomEvent event) {
+    	try {
+    		long chatroomId = event.getEventMsg();
+	    	broadcastMessage(
+	    			setMessage(3,"This chatroom has been removed!",new UserDTO()),
+	    			chatroomId
+	    	);
+	    	if(chatrooms.containsKey(chatroomId)) chatrooms.remove(chatroomId);
+    	}catch(Exception ex) {
+    		logger.error("Error while deleting users in chatroom " + event.getEventMsg());
+            ex.printStackTrace();
+    	}
+    }
 
     /**
      * Cette méthode permet de construire le message à envoyer en Json
@@ -171,7 +195,7 @@ public class ChatServer {
     /**
      * Cette méthode permet d'envoyer un message à tous les utilisateurs connectés dans la chatroom correspondante (inclus l'utilisateur qui envoie le message)
      */
-    private void broadcastMessage(String message, long chatroomId){
+    private static void broadcastMessage(String message, long chatroomId){
         if(chatrooms.containsKey(chatroomId)){
             chatrooms.get(chatroomId).forEach((session, user) -> {
                 //session.getBasicRemote().sendText(message);
