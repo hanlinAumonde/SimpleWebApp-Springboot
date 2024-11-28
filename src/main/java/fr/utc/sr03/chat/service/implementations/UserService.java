@@ -188,11 +188,11 @@ public class UserService implements UserServiceInt {
      */
     @Override
     public void sendResetPasswordEmail(User user, HttpServletRequest request) {
-        String token = UUID.randomUUID().toString();
+        UUID token = UUID.randomUUID();
         ResetPasswordValidate resetPasswordValidate = new ResetPasswordValidate(token, user);
         resetPasswordValidateRespository.save(resetPasswordValidate);
         String ResetPasswordLink = "http://" + request.getServerName() + ":" + request.getServerPort()
-                + "/reset-password/reset-password-form?token=" + token;
+                + "/reset-password/reset-password-form?token=" + token.toString();
         String subject = "Reset Password";
         String content = "Bonjour " + user.getFirstName() + ",\n\n"
                 + "Cliquer sur le lien ci-dessous pour réinitialiser votre mot de passe :\n"

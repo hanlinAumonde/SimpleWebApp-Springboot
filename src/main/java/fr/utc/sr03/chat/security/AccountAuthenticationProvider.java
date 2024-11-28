@@ -4,6 +4,7 @@ import fr.utc.sr03.chat.model.User;
 import fr.utc.sr03.chat.service.implementations.ChatroomService;
 import fr.utc.sr03.chat.service.implementations.UserChatroomRelationService;
 import fr.utc.sr03.chat.service.implementations.UserService;
+import fr.utc.sr03.chat.service.utils.WithoutPasswordEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,11 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
     @Autowired
     @Lazy
     private PasswordEncoder passwordEncoder;
-
+    /*
+    @Autowired
+    @Lazy
+    private WithoutPasswordEncoder w;
+	*/
     @Resource
     private UserService userService;
 
@@ -71,7 +76,8 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
         }
 
         Collection<? extends GrantedAuthority> AUTHORITIES = account.get().getAuthorities();
-
+        
+        //if (w.matches(password, account.get().getPassword())) {
         if (passwordEncoder.matches(password, account.get().getPassword())) {
             userService.setFailedAttemptsOfUser(account.get().getId(),0);
             return new UsernamePasswordAuthenticationToken(account.get(), password, AUTHORITIES);

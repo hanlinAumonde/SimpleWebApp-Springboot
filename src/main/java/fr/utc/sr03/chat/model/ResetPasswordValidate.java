@@ -2,6 +2,7 @@ package fr.utc.sr03.chat.model;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "reset_password_validate")
@@ -13,7 +14,7 @@ public class ResetPasswordValidate {
     private long id;
 
     @Column(name = "token")
-    private String token;
+    private UUID token;
 
     @OneToOne(targetEntity = User.class, fetch = FetchType.EAGER)
     @JoinColumn(nullable = false, name = "user_id")
@@ -25,7 +26,7 @@ public class ResetPasswordValidate {
     public ResetPasswordValidate() {
     }
 
-    public ResetPasswordValidate(String token, User user) {
+    public ResetPasswordValidate(UUID token, User user) {
         this.token = token;
         this.user = user;
         this.expiryDate = LocalDateTime.now().plusMinutes(EXPIRATION);
@@ -39,11 +40,11 @@ public class ResetPasswordValidate {
         this.id = id;
     }
 
-    public String getToken() {
+    public UUID getToken() {
         return this.token;
     }
 
-    public void setToken(String token) {
+    public void setToken(UUID token) {
         this.token = token;
     }
 

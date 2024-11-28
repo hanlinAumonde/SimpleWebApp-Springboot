@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ResetPasswordValidateService implements ResetPasswordValidateServiceInt {
@@ -18,7 +19,7 @@ public class ResetPasswordValidateService implements ResetPasswordValidateServic
      * Cette méthode permet de trouver le validate correspondant au token passé en paramètre
      */
     @Override
-    public Optional<ResetPasswordValidate> findValidateByToken(String token) {
+    public Optional<ResetPasswordValidate> findValidateByToken(UUID token) {
         return resetPasswordValidateRespository.findByToken(token);
     }
 

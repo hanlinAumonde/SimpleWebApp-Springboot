@@ -12,6 +12,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
+import java.util.UUID;
 
 @Controller
 @RequestMapping(value="/reset-password")
@@ -64,7 +65,7 @@ public class ResetPasswordController {
             model.addAttribute("success", msg);
             return "resetPassword";
         }
-        Optional<ResetPasswordValidate> resetPasswordValidate = token != null ? resetPasswordValidateService.findValidateByToken(token) : resetPasswordValidateService.findValidateByToken(errorToken);
+        Optional<ResetPasswordValidate> resetPasswordValidate = token != null ? resetPasswordValidateService.findValidateByToken(UUID.fromString(token)) : resetPasswordValidateService.findValidateByToken(UUID.fromString(errorToken));
 
         if (resetPasswordValidate.isPresent()){
             if(resetPasswordValidate.get().isExpired() || msg.startsWith("Error - expired")){
@@ -84,7 +85,7 @@ public class ResetPasswordController {
      */
     @PutMapping(value = "/reset-password-form")
     public String updateNewPassword(@RequestParam(value = "token")String token, @RequestParam(value = "new_password") String password, RedirectAttributes redirectAttributes){
-        Optional<ResetPasswordValidate> resetPasswordValidate = resetPasswordValidateService.findValidateByToken(token);
+        Optional<ResetPasswordValidate> resetPasswordValidate = resetPasswordValidateService.findValidateByToken(UUID.fromString(token));
         if (resetPasswordValidate.isPresent()){
             if(resetPasswordValidate.get().isExpired()){
                 redirectAttributes.addFlashAttribute("msg", "Error - expired");
