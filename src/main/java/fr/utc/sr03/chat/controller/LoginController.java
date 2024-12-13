@@ -3,6 +3,7 @@ package fr.utc.sr03.chat.controller;
 import fr.utc.sr03.chat.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,13 +21,15 @@ import javax.servlet.http.HttpSession;
 public class LoginController {
     private final Logger logger = LoggerFactory.getLogger(LoginController.class);
 
-    private static final String remoteFrontEndUrl = "http://localhost:3000";
+    @Value("${FrontEndURL}")
+    private String remoteFrontEndUrl;
 
     /**
      * Cette méthode permet d'obtenir le formulaire de login
      */
     @GetMapping("/login")
     public String getLogin(Model model, HttpServletRequest request) {
+    	logger.info("访问");
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
             User user = (User) auth.getPrincipal(); // obtenir l'utilisateur connecté s'il existe

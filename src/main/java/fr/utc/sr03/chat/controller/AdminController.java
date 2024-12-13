@@ -105,10 +105,6 @@ public class AdminController {
                 chatroomService.deleteChatRoom(relation.getChatroomId());
             }
         }
-        List<ResetPasswordValidate> validatesOfUsers = resetPasswordValidateService.findValidatesByUserId(userId);
-        for(ResetPasswordValidate validate : validatesOfUsers){
-            resetPasswordValidateService.deleteValidate(validate);
-        }
         userService.deleteUserById(userId);
         return "redirect:/admin/adminSuppressionUser";
     }

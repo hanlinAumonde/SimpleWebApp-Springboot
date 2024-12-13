@@ -1,11 +1,10 @@
 package fr.utc.sr03.chat.model;
 
-import org.springframework.format.annotation.DateTimeFormat;
-
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "chatrooms")
@@ -28,6 +27,13 @@ public class Chatroom {
 
     @Column(name = "is_active")
     private boolean active;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_id", nullable = false)
+    private User creator;
+    
+    @ManyToMany(mappedBy = "joinedRooms")
+    private Set<User> members = new HashSet<>();
 
     public Chatroom(){}
 

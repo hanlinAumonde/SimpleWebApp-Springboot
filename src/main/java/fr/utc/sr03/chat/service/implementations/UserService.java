@@ -39,14 +39,17 @@ public class UserService implements UserServiceInt {
 
     @Autowired
     private ResetPasswordValidateRespository resetPasswordValidateRespository;
+    
+    private Pageable getPageableSetting(int page, int size) {
+    	return PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
+    }
 
     /**
      * Cette méthode permet de trouver tous les utilisateurs en page
      */
     @Override
     public Page<User> findAllUsersByPage(int page, int size) {
-        Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
-        return userRepository.findAll(pageable);
+        return userRepository.findAll(this.getPageableSetting(page, size));
     }
 
     /**
@@ -80,8 +83,7 @@ public class UserService implements UserServiceInt {
      */
     @Override
     public Page<User> findAllUsersNotAdminByPage(int page, int size){
-        Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
-        return userRepository.findByAdmin(false,pageable);
+        return userRepository.findByAdmin(false,this.getPageableSetting(page, size));
     }
 
     /**
@@ -90,8 +92,7 @@ public class UserService implements UserServiceInt {
      */
     @Override
     public Page<User> findAllOtherUsersNotAdminByPage(int page, int size, long userId){
-        Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
-        return userRepository.findAllOtherUsersNotAdminByPage(userId,pageable);
+        return userRepository.findAllOtherUsersNotAdminByPage(userId,this.getPageableSetting(page, size));
     }
 
     /**
@@ -99,8 +100,7 @@ public class UserService implements UserServiceInt {
      */
     @Override
     public Page<User> findUsersInvitedToChatroomByPage(long chatroomId, int page, int size) {
-        Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
-        return userRepository.findUsersInvitedToChatroomByPage(chatroomId,pageable);
+        return userRepository.findUsersInvitedToChatroomByPage(chatroomId,this.getPageableSetting(page, size));
     }
 
     /**
@@ -108,8 +108,7 @@ public class UserService implements UserServiceInt {
      */
     @Override
     public Page<User> findUsersNotInvitedToChatroomByPage(long chatroomId, int page, int size) {
-        Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
-        return userRepository.findUsersNotInvitedToChatroomByPage(chatroomId,pageable);
+        return userRepository.findUsersNotInvitedToChatroomByPage(chatroomId,this.getPageableSetting(page, size));
     }
 
     /**
@@ -127,8 +126,7 @@ public class UserService implements UserServiceInt {
      */
     @Override
     public Page<User> findAllInactiveUsersByPage(int page, int size) {
-        Pageable pageable = PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
-        return userRepository.findByActive(false,pageable);
+        return userRepository.findByActive(false,this.getPageableSetting(page, size));
     }
 
     /**
