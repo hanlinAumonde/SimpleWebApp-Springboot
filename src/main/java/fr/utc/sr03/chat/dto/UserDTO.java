@@ -1,4 +1,4 @@
-package fr.utc.sr03.chat.service.utils;
+package fr.utc.sr03.chat.dto;
 
 /**
  * Cette classe permet de représenter un utilisateur avec moins d'informations que la classe User(pas de mdp)

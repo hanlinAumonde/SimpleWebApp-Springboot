@@ -3,13 +3,18 @@ package fr.utc.sr03.chat.service.implementations;
 import fr.utc.sr03.chat.dao.ChatroomRepository;
 import fr.utc.sr03.chat.dao.UserChatroomRelationRepository;
 import fr.utc.sr03.chat.dao.UserRepository;
+import fr.utc.sr03.chat.dto.ChatroomDTO;
+import fr.utc.sr03.chat.dto.ChatroomRequestDTO;
+import fr.utc.sr03.chat.dto.ChatroomWithOwnerAndStatusDTO;
+import fr.utc.sr03.chat.dto.DTOMapper;
+import fr.utc.sr03.chat.dto.ModifyChatroomRequestDTO;
+import fr.utc.sr03.chat.dto.UserDTO;
 import fr.utc.sr03.chat.model.Chatroom;
 import fr.utc.sr03.chat.model.User;
 import fr.utc.sr03.chat.model.UserChatroomRelation;
 import fr.utc.sr03.chat.service.interfaces.ChatroomServiceInt;
-import fr.utc.sr03.chat.service.utils.ChatroomRequestDTO;
 import fr.utc.sr03.chat.service.utils.RemoveChatroomEvent;
-import fr.utc.sr03.chat.service.utils.UserDTO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,10 +104,31 @@ public class ChatroomService implements ChatroomServiceInt {
      * Cette méthode permet de trouver les chatrooms crées/joints par un utilisateur en Page(size = 5)
      */
     @Transactional(readOnly = true)
-    @Override
-    public Page<Chatroom> getChatroomsOwnedOrJoinedOfUserByPage(long userId, boolean isOwner, int page, int size) {
+    private Page<Chatroom> getChatroomsOwnedOrJoinedOfUserByPage(long userId, boolean isOwner, int page, int size) {
         Pageable pageable = PageRequest.of(page,size, Sort.sort(Chatroom.class).by(Chatroom::getTitre).ascending());
         return chatRoomRepository.findChatroomsOwnedOrJoinedOfUserByPage(userId,isOwner,pageable);
+    }
+    
+    @Override
+	public Page<ChatroomDTO> getChatroomsOwnedOfUserByPage(long userId, int page, int size) {
+		Page<Chatroom> chatrooms = getChatroomsOwnedOrJoinedOfUserByPage(userId, true, page, size);
+		return chatrooms.map(chatroom -> {
+			return DTOMapper.toChatroomDTO(chatroom, chatroom.isActive() && !chatroom.hasNotStarted());
+		});
+	}
+    
+    @Transactional(readOnly = true)
+    @Override
+	public Page<ChatroomWithOwnerAndStatusDTO> getChatroomsJoinedOfUserByPage(long userId, boolean isOwner, int page, int size) {
+    	Page<Chatroom> chatrooms = getChatroomsOwnedOrJoinedOfUserByPage(userId, isOwner, page, size);
+    	return chatrooms.map(chatroom -> {
+    		User owner = userRepository.findById(
+    				userChatroomRelationService.findOwnerOfChatroom(chatroom.getId()).get().getUserId()
+    		).get();
+    		// etape 2 : recuperer le status du chatroom
+    		boolean isActive = chatroom.isActive() && !chatroom.hasNotStarted();
+    		return DTOMapper.toChatroomWithOwnerAndStatusDTO(chatroom, owner, isActive);
+    	});
     }
 
     /**
@@ -166,7 +192,7 @@ public class ChatroomService implements ChatroomServiceInt {
      */
     @Transactional
     @Override
-    public boolean updateChatroom(ChatroomRequestDTO chatroomRequestDTO, long chatroomId) {
+    public boolean updateChatroom(ModifyChatroomRequestDTO chatroomRequestDTO, long chatroomId) {
         try{
             Chatroom chatroom = chatRoomRepository.findById(chatroomId).get();
             boolean isChanged = false;
@@ -191,10 +217,25 @@ public class ChatroomService implements ChatroomServiceInt {
                 chatroom.setHoraireTermine(dateEnd);
                 isChanged = true;
             }
+            // ajouter les utilisateurs invités
+			for (UserDTO user : chatroomRequestDTO.getListAddedUsers()) {
+				if (userChatroomRelationRepository.findByChatroomIdAndUserId(chatroomId, user.getId()).isEmpty()) {
+					userChatroomRelationService.addRelation(user.getId(), chatroomId, false);
+					isChanged = true;
+				}
+			}
+			// supprimer les utilisateurs invités
+			for (UserDTO user : chatroomRequestDTO.getListRemovedUsers()) {
+				Optional<UserChatroomRelation> relation = userChatroomRelationRepository.findByChatroomIdAndUserId(chatroomId, user.getId());
+				if (relation.isPresent() && !relation.get().isOwned()) {
+					userChatroomRelationRepository.delete(relation.get());
+					isChanged = true;
+				}
+			}
             if(isChanged){
                 chatRoomRepository.save(chatroom);
             }
-            return isChanged;
+            return true;
         }catch (RuntimeException e){
             logger.error("Error while updating chatroom with id " + chatroomId + " : " + e.getMessage());
             return false;

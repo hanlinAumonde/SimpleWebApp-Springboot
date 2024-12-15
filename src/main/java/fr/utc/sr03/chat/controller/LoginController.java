@@ -29,7 +29,6 @@ public class LoginController {
      */
     @GetMapping("/login")
     public String getLogin(Model model, HttpServletRequest request) {
-    	logger.info("访问");
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
             User user = (User) auth.getPrincipal(); // obtenir l'utilisateur connecté s'il existe

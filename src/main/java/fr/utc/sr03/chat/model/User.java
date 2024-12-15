@@ -39,19 +39,20 @@ public class User implements UserDetails {
     @Column(name = "failed_attempts")
     private int failedAttempts = 0;
     
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ResetPasswordValidate> resetPasswordValidates;
     
-    @OneToMany(mappedBy="creator", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Chatroom> createdRooms = new HashSet<>();
-    
-    @ManyToMany
-    @JoinTable(
-		name = "user_chatroom_relationship",
-		joinColumns = @JoinColumn(name="user_id"),
-		inverseJoinColumns = @JoinColumn(name="chatroom_id")
-    )
-    private Set<Chatroom> joinedRooms = new HashSet<>();
+	/*
+	 * @OneToMany(mappedBy="creator", cascade = CascadeType.ALL, orphanRemoval =
+	 * true) private Set<Chatroom> createdRooms = new HashSet<>();
+	 * 
+	 * @ManyToMany
+	 * 
+	 * @JoinTable( name = "user_chatroom_relationship", joinColumns
+	 * = @JoinColumn(name="user_id"), inverseJoinColumns
+	 * = @JoinColumn(name="chatroom_id") ) private Set<Chatroom> joinedRooms = new
+	 * HashSet<>();
+	 */
     
     public User(){}
 

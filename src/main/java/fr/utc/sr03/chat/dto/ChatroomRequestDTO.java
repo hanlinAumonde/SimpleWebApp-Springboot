@@ -1,4 +1,4 @@
-package fr.utc.sr03.chat.service.utils;
+package fr.utc.sr03.chat.dto;
 
 import java.util.List;
 

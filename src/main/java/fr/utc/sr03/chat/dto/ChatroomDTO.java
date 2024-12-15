@@ -1,4 +1,4 @@
-package fr.utc.sr03.chat.service.utils;
+package fr.utc.sr03.chat.dto;
 
 import java.util.List;
 
@@ -9,6 +9,7 @@ public class ChatroomDTO {
     public long id;
     public String titre;
     public String description;
+    public boolean isActif;
     //getters and setters
     public long getId() {
         return this.id;
@@ -28,4 +29,12 @@ public class ChatroomDTO {
     public void setDescription(String description) {
         this.description= description;
     }
+
+	public boolean getIsActif() {
+		return this.isActif;
+	}
+	
+	public void setIsActif(boolean isActif) {
+		this.isActif = isActif;
+	}
 }

@@ -1,8 +1,12 @@
 package fr.utc.sr03.chat.service.interfaces;
 
+import fr.utc.sr03.chat.dto.ChatroomDTO;
+import fr.utc.sr03.chat.dto.ChatroomRequestDTO;
+import fr.utc.sr03.chat.dto.ChatroomWithOwnerAndStatusDTO;
+import fr.utc.sr03.chat.dto.ModifyChatroomRequestDTO;
 import fr.utc.sr03.chat.model.Chatroom;
 import fr.utc.sr03.chat.model.User;
-import fr.utc.sr03.chat.service.utils.ChatroomRequestDTO;
+
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -13,8 +17,12 @@ public interface ChatroomServiceInt {
 
     Chatroom createChatroom(ChatroomRequestDTO chatroomRequestDTO, long userId);
 
-    Page<Chatroom> getChatroomsOwnedOrJoinedOfUserByPage(long userId, boolean isOwner, int page, int size);
+    //Page<Chatroom> getChatroomsOwnedOrJoinedOfUserByPage(long userId, boolean isOwner, int page, int size);
 
+    Page<ChatroomDTO> getChatroomsOwnedOfUserByPage(long userId, int page, int size);
+    
+    Page<ChatroomWithOwnerAndStatusDTO> getChatroomsJoinedOfUserByPage(long userId, boolean isOwner, int page, int size);
+    
     List<User> getAllUsersInChatroom(long chatroomId);
 
     boolean deleteChatRoom(long chatRoomId);
@@ -23,7 +31,10 @@ public interface ChatroomServiceInt {
 
     boolean deleteUserInvited(long chatroomId, long userId);
 
-    boolean updateChatroom(ChatroomRequestDTO chatroomRequestDTO, long chatroomId);
-
     boolean checkUserIsOwnerOfChatroom(long userId, long chatroomId);
+
+	/**
+	 * Cette méthode permet de mettre à jour un chatroom
+	 */
+	boolean updateChatroom(ModifyChatroomRequestDTO chatroomRequestDTO, long chatroomId);
 }

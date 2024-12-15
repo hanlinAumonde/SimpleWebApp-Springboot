@@ -3,11 +3,12 @@ package fr.utc.sr03.chat.websocket;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import fr.utc.sr03.chat.dto.DTOMapper;
+import fr.utc.sr03.chat.dto.UserDTO;
 import fr.utc.sr03.chat.model.User;
 import fr.utc.sr03.chat.service.implementations.UserService;
 import fr.utc.sr03.chat.service.utils.SpringContext;
-import fr.utc.sr03.chat.service.utils.UserDTO;
-import fr.utc.sr03.chat.service.utils.DTOMapper;
 import fr.utc.sr03.chat.service.utils.RemoveChatroomEvent;
 
 import org.slf4j.Logger;

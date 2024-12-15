@@ -28,12 +28,14 @@ public class Chatroom {
     @Column(name = "is_active")
     private boolean active;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "creator_id", nullable = false)
-    private User creator;
-    
-    @ManyToMany(mappedBy = "joinedRooms")
-    private Set<User> members = new HashSet<>();
+	/*
+	 * @ManyToOne(fetch = FetchType.LAZY)
+	 * 
+	 * @JoinColumn(name = "creator_id", nullable = false) private User creator;
+	 * 
+	 * @ManyToMany(mappedBy = "joinedRooms") private Set<User> members = new
+	 * HashSet<>();
+	 */
 
     public Chatroom(){}
 
