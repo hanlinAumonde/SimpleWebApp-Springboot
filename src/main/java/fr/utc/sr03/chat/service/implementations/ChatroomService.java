@@ -7,6 +7,7 @@ import fr.utc.sr03.chat.dto.ChatroomDTO;
 import fr.utc.sr03.chat.dto.ChatroomRequestDTO;
 import fr.utc.sr03.chat.dto.ChatroomWithOwnerAndStatusDTO;
 import fr.utc.sr03.chat.dto.DTOMapper;
+import fr.utc.sr03.chat.dto.ModifyChatroomDTO;
 import fr.utc.sr03.chat.dto.ModifyChatroomRequestDTO;
 import fr.utc.sr03.chat.dto.UserDTO;
 import fr.utc.sr03.chat.model.Chatroom;
@@ -52,8 +53,9 @@ public class ChatroomService implements ChatroomServiceInt {
      * Cette méthode permet de trouver le chatroom correspondant à l'id passé en paramètre
      */
     @Override
-    public Optional<Chatroom> findChatroom(long chatroomId) {
-        return chatRoomRepository.findById(chatroomId);
+    public Optional<ModifyChatroomDTO> findChatroom(long chatroomId) {
+    	Optional<ModifyChatroomDTO> chatroom = chatRoomRepository.findById(chatroomId).map(DTOMapper::toModifyChatroomDTO);
+        return chatroom;
     }
 
     /**
@@ -62,7 +64,7 @@ public class ChatroomService implements ChatroomServiceInt {
      */
     @Transactional
     @Override
-    public Chatroom createChatroom(ChatroomRequestDTO chatroomRequestDTO, long userId) {
+    public boolean createChatroom(ChatroomRequestDTO chatroomRequestDTO, long userId) {
         try {
             Chatroom chatroom = new Chatroom();
             chatroom.setTitre(chatroomRequestDTO.getTitre());
@@ -79,7 +81,7 @@ public class ChatroomService implements ChatroomServiceInt {
             List<Chatroom> allChatrooms = chatRoomRepository.findAll();
             for (Chatroom c : allChatrooms) {
                 if (c.equals(chatroom)) {
-                    return chatroom;
+                    return false;
                 }
             }
             chatRoomRepository.save(chatroom);
@@ -93,10 +95,10 @@ public class ChatroomService implements ChatroomServiceInt {
             for (UserDTO user : chatroomRequestDTO.getUsersInvited()) {
                 userChatroomRelationService.addRelation(user.getId(), chatroomAdded.getId(), false);
             }
-            return chatroomAdded;
+            return true;
         } catch (Exception e) {
             logger.error("Error while creating chatroom : " + e.getMessage());
-            return new Chatroom();
+            return false;
         }
     }
 
@@ -136,12 +138,12 @@ public class ChatroomService implements ChatroomServiceInt {
      */
     @Transactional(readOnly = true)
     @Override
-    public List<User> getAllUsersInChatroom(long chatroomId){
+    public List<UserDTO> getAllUsersInChatroom(long chatroomId){
         List<User> allUsersInChatroom = new ArrayList<>();
         for(UserChatroomRelation user : userChatroomRelationRepository.findByChatroomId(chatroomId)){
             userRepository.findById(user.getUserId()).ifPresent(allUsersInChatroom::add);
         }
-        return allUsersInChatroom;
+        return allUsersInChatroom.stream().map(DTOMapper::toUserDTO).toList();
     }
 
     /**

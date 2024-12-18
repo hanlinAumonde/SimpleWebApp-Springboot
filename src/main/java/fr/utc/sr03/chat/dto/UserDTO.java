@@ -8,6 +8,9 @@ public class UserDTO {
     public String lastName;
     public String firstName;
     public String mail;
+    
+	public UserDTO() {
+	}
 
     //getters and setters
     public long getId() {

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import fr.utc.sr03.chat.dto.DTOMapper;
 import fr.utc.sr03.chat.dto.UserDTO;
 import fr.utc.sr03.chat.model.User;
+import fr.utc.sr03.chat.service.implementations.ChatMessageService;
 import fr.utc.sr03.chat.service.implementations.UserService;
 import fr.utc.sr03.chat.service.utils.SpringContext;
 import fr.utc.sr03.chat.service.utils.RemoveChatroomEvent;
@@ -49,6 +50,9 @@ public class ChatServer {
 
     //C'est pour obtenir le service UserService pour gérer les données dans la base de données
     private final UserService userService = SpringContext.getBean(UserService.class);
+    
+    //C'est pour obtenir le service ChatMessageService pour gérer les messages dans la base de données
+    private final ChatMessageService chatMessageService = SpringContext.getBean(ChatMessageService.class);
 
     /**
      * Cette méthode permet de traiter l'ouverture d'une connexion websocket
@@ -71,15 +75,16 @@ public class ChatServer {
                 chatrooms.put(chatroomId, newChatroom);
             }
             //on envoie un message de connexion à tous les utilisateurs connectés dans la chatroom correspondante
+            Date now = new Date();
             broadcastMessage(
-                    setMessage(1,"",this.userInfo)
+                    setMessage(1,"",this.userInfo,now)
                     ,chatroomId
             );
             //Pour chaque utilisateur qui est déjà connecté dans le chatroom, on envoie un message de connexion à l'utilisateur qui ouvre la connexion
             for (Map.Entry<Session, UserDTO> entry : chatrooms.get(chatroomId).entrySet()) {
                 if(!entry.getKey().equals(session)){
                     sendMsgToMe(
-                            setMessage(1,"",entry.getValue())
+                            setMessage(1,"",entry.getValue(),now)
                             ,chatroomId
                     );
                 }
@@ -105,7 +110,7 @@ public class ChatServer {
         try{
             //on envoie un message de déconnexion à tous les utilisateurs connectés dans la chatroom correspondante
             broadcastMessageExceptSender(
-                    setMessage(2,"",this.userInfo)
+                    setMessage(2,"",this.userInfo,new Date())
                     ,chatroomId
             );
             //on supprime la session de l'utilisateur de la chatroom correspondante, si la chatroom est vide, on la supprime
@@ -128,9 +133,11 @@ public class ChatServer {
     @OnMessage
     public void receptionMessage(String message, @PathParam("chatroomId") long chatroomId){
         try{
+        	Date now = new Date();
+        	chatMessageService.saveMsgIntoCollection(chatroomId, userInfo, message, now);
             //on envoie le message à tous les utilisateurs connectés dans la chatroom correspondante
             broadcastMessage(
-                    setMessage(0,message,this.userInfo)
+                    setMessage(0,message,this.userInfo,now)
                     ,chatroomId
             );
         }catch (Exception e){
@@ -156,7 +163,7 @@ public class ChatServer {
     	try {
     		long chatroomId = event.getEventMsg();
 	    	broadcastMessage(
-	    			setMessage(3,"This chatroom has been removed!",new UserDTO()),
+	    			setMessage(3,"This chatroom has been removed!",new UserDTO(),new Date()),
 	    			chatroomId
 	    	);
 	    	if(chatrooms.containsKey(chatroomId)) chatrooms.remove(chatroomId);
@@ -169,10 +176,10 @@ public class ChatServer {
     /**
      * Cette méthode permet de construire le message à envoyer en Json
      */
-    private String setMessage(int messageType, String message, UserDTO userInfo) {
+    private String setMessage(int messageType, String message, UserDTO userInfo, Date now) {
         //format : {user: {id: 1, username: "user1 user1"}, messageType: 0, message: "hello" , timestamp : "18:00"}
         try {
-            Date now = new Date();
+            //Date now = new Date();
             SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
 
             ObjectNode finalNode = mapper.createObjectNode();

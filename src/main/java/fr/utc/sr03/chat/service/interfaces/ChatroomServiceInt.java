@@ -3,7 +3,9 @@ package fr.utc.sr03.chat.service.interfaces;
 import fr.utc.sr03.chat.dto.ChatroomDTO;
 import fr.utc.sr03.chat.dto.ChatroomRequestDTO;
 import fr.utc.sr03.chat.dto.ChatroomWithOwnerAndStatusDTO;
+import fr.utc.sr03.chat.dto.ModifyChatroomDTO;
 import fr.utc.sr03.chat.dto.ModifyChatroomRequestDTO;
+import fr.utc.sr03.chat.dto.UserDTO;
 import fr.utc.sr03.chat.model.Chatroom;
 import fr.utc.sr03.chat.model.User;
 
@@ -13,9 +15,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ChatroomServiceInt {
-    Optional<Chatroom> findChatroom(long chatroomId);
+    Optional<ModifyChatroomDTO> findChatroom(long chatroomId);
 
-    Chatroom createChatroom(ChatroomRequestDTO chatroomRequestDTO, long userId);
+    boolean createChatroom(ChatroomRequestDTO chatroomRequestDTO, long userId);
 
     //Page<Chatroom> getChatroomsOwnedOrJoinedOfUserByPage(long userId, boolean isOwner, int page, int size);
 
@@ -23,7 +25,7 @@ public interface ChatroomServiceInt {
     
     Page<ChatroomWithOwnerAndStatusDTO> getChatroomsJoinedOfUserByPage(long userId, boolean isOwner, int page, int size);
     
-    List<User> getAllUsersInChatroom(long chatroomId);
+    List<UserDTO> getAllUsersInChatroom(long chatroomId);
 
     boolean deleteChatRoom(long chatRoomId);
 

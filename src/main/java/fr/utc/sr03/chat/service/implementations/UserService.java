@@ -2,6 +2,8 @@ package fr.utc.sr03.chat.service.implementations;
 
 import fr.utc.sr03.chat.dao.ResetPasswordValidateRespository;
 import fr.utc.sr03.chat.dao.UserRepository;
+import fr.utc.sr03.chat.dto.DTOMapper;
+import fr.utc.sr03.chat.dto.UserDTO;
 import fr.utc.sr03.chat.model.ResetPasswordValidate;
 import fr.utc.sr03.chat.model.User;
 import fr.utc.sr03.chat.service.interfaces.UserServiceInt;
@@ -56,8 +58,10 @@ public class UserService implements UserServiceInt {
      * Cette méthode permet de récupérer un utilisateur connecté
      */
     @Override
-    public User getLoggedUser() {
-        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public UserDTO getLoggedUser() {
+        return DTOMapper.toUserDTO(
+        	(User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()
+        );
     }
 
     /**
@@ -91,24 +95,27 @@ public class UserService implements UserServiceInt {
      * Elle est utilisée dans la page User pour donner l'utilisateur une liste des utilisateurs qu'il peut ajouter à un chatroom
      */
     @Override
-    public Page<User> findAllOtherUsersNotAdminByPage(int page, int size, long userId){
-        return userRepository.findAllOtherUsersNotAdminByPage(userId,this.getPageableSetting(page, size));
+    public Page<UserDTO> findAllOtherUsersNotAdminByPage(int page, int size, long userId){
+        return userRepository.findAllOtherUsersNotAdminByPage(userId,this.getPageableSetting(page, size))
+        		.map(DTOMapper::toUserDTO);
     }
 
     /**
      * Cette méthode permet de trouver les utilisateurs invités à un chatroom
      */
     @Override
-    public Page<User> findUsersInvitedToChatroomByPage(long chatroomId, int page, int size) {
-        return userRepository.findUsersInvitedToChatroomByPage(chatroomId,this.getPageableSetting(page, size));
+    public Page<UserDTO> findUsersInvitedToChatroomByPage(long chatroomId, int page, int size) {
+        return userRepository.findUsersInvitedToChatroomByPage(chatroomId,this.getPageableSetting(page, size))
+        		.map(DTOMapper::toUserDTO);
     }
 
     /**
      * Cette méthode permet de trouver les utilisateurs qui ne sont pas invités à un chatroom
      */
     @Override
-    public Page<User> findUsersNotInvitedToChatroomByPage(long chatroomId, int page, int size) {
-        return userRepository.findUsersNotInvitedToChatroomByPage(chatroomId,this.getPageableSetting(page, size));
+    public Page<UserDTO> findUsersNotInvitedToChatroomByPage(long chatroomId, int page, int size) {
+        return userRepository.findUsersNotInvitedToChatroomByPage(chatroomId,this.getPageableSetting(page, size))
+        		.map(DTOMapper::toUserDTO);
     }
 
     /**

@@ -1,5 +1,6 @@
 package fr.utc.sr03.chat.service.interfaces;
 
+import fr.utc.sr03.chat.dto.UserDTO;
 import fr.utc.sr03.chat.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
@@ -12,18 +13,18 @@ import java.util.Optional;
 
 public interface UserServiceInt {
 
-    User getLoggedUser();
+    UserDTO getLoggedUser();
     Page<User> findAllUsersByPage(int page, int size);
 
     boolean addUser(User user);
 
     Page<User> findAllUsersNotAdminByPage(int page, int size);
 
-    Page<User> findAllOtherUsersNotAdminByPage(int page, int size, long userId);
+    Page<UserDTO> findAllOtherUsersNotAdminByPage(int page, int size, long userId);
 
-    Page<User> findUsersInvitedToChatroomByPage(long chatroomId, int page, int size);
+    Page<UserDTO> findUsersInvitedToChatroomByPage(long chatroomId, int page, int size);
 
-    Page<User> findUsersNotInvitedToChatroomByPage(long chatroomId, int page, int size);
+    Page<UserDTO> findUsersNotInvitedToChatroomByPage(long chatroomId, int page, int size);
 
     void deleteUserById(Long id);
 

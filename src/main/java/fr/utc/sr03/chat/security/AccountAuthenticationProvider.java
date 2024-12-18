@@ -57,18 +57,11 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
         logger.info("userEmail : " + userEmail);
         logger.info("password : " + password);
 
-        Optional<User> admin = userService.findUserOrAdmin(userEmail, true);
-        Optional<User> user = userService.findUserOrAdmin(userEmail, false);
-        Optional<User> account;
-
-        if (admin.isEmpty() && user.isEmpty()) {
-            logger.info("Identifiants incorrects");
-            throw new UsernameNotFoundException("Identifiants incorrects");
-        }else if(admin.isEmpty()) {
-            account = user;
-        }else{
-            account = admin;
-        }
+        Optional<User> account = userService.findUserByEmail(userEmail);
+		if (account.isEmpty()) {
+			logger.info("Identifiants incorrects");
+			throw new UsernameNotFoundException("Identifiants incorrects");
+		}
 
         if(!account.get().isActive()){
             logger.info("Compté bloqué");
