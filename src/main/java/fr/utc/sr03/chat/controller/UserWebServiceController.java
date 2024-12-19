@@ -211,6 +211,22 @@ public class UserWebServiceController {
     	}
     	return ResponseEntity.status(401).body(false);
     }
+    
+    /*
+     * Cette méthode permet qu'un utilisateur quitte une chatroom
+     */
+    @DeleteMapping("user/chatrooms/{chatroomId}/users/invited/{userId}")
+    public ResponseEntity<Boolean> leaveChatroom(@PathVariable long chatroomId, @PathVariable long userId){
+    	if(userService.checkUserLoginStatus()) {
+    		boolean res = chatroomService.deleteUserInvited(chatroomId, userId);
+    		if(res) {
+    			return ResponseEntity.ok(true);
+    		}else {
+    			return ResponseEntity.status(500).body(false);
+    		}
+    	}
+    	return ResponseEntity.status(401).body(false);
+    }
 
     /**
      * Cette méthode permet d'obtenir tous les utilisateurs dans une chatroom
@@ -229,6 +245,9 @@ public class UserWebServiceController {
         return ResponseEntity.status(401).body(new ArrayList<>());
     }
     
+    /*
+     * Cette méthode permet d'obtenir l'historique des messages dans une chatroom
+     */
     @GetMapping("/user/chatrooms/{chatroomId}/history-messages")
 	public ResponseEntity<List<ChatMsgDTO>> getHistoryMsgByChatroomId(@PathVariable long chatroomId) {
 		if (userService.checkUserLoginStatus()) {
@@ -237,4 +256,15 @@ public class UserWebServiceController {
 		}
 		return ResponseEntity.status(401).body(new ArrayList<>());
 	}
+    
+    /*
+     * Cette méthode permet d'obtenir l'historique des messages dans une chatroom par le numero de page
+     */
+    @GetMapping("user/chatrooms/{chatroomId}/history-messages/{pageNum}")
+    public ResponseEntity<List<ChatMsgDTO>> getHistoryMsgByChatroomIdAndPage(@PathVariable long chatroomId, @PathVariable int pageNum){
+    	if(userService.checkUserLoginStatus()) {
+    		return ResponseEntity.ok(chatMessageService.getChatMessagesByChatroomIdByPage(chatroomId, pageNum));
+    	}
+    	return ResponseEntity.status(401).body(new ArrayList<>());
+    }
 }

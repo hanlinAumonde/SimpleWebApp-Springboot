@@ -7,6 +7,10 @@ import java.util.List;
 import org.apache.commons.lang3.time.DateUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -33,6 +37,12 @@ public class ChatMessageService implements ChatMessageServiceInt {
 	
 	private static final String MSG_DATE_SIGN = "dateSign";
 	private static final String MSG_CONTENT = "content";
+	private static final String MSG_LATEST_DATE_SIGN = "latestDateSign";
+	private static final int DEFAULT_PAGE_SIZE = 10;
+	
+	private Pageable getPageableSetting(int page, int size) {
+		return PageRequest.of(page,size, Sort.by(Sort.Direction.DESC, "timestamp"));
+	}
 
 	@Override
 	public void saveMsgIntoCollection(long chatroomId, UserDTO sender, String content, Date timestamp) {
@@ -47,16 +57,35 @@ public class ChatMessageService implements ChatMessageServiceInt {
 	@Override
 	public List<ChatMsgDTO> getChatMessagesByChatroomId(long chatroomId) {
 		List<ChatMessage> initialRes = chatMessageRepository.findByChatroomId(chatroomId);
+		return setResMsgList(initialRes);
+	}
+	
+	@Override
+	public List<ChatMsgDTO> getChatMessagesByChatroomIdByPage(long chatroomId, int page){
+		List<ChatMessage> initialRes = chatMessageRepository.findByChatroomId(chatroomId, 
+				getPageableSetting(page, DEFAULT_PAGE_SIZE)).getContent();
+		return setResMsgList(initialRes);
+	}
+	
+	private List<ChatMsgDTO> setResMsgList(List<ChatMessage> initialList){
 		List<ChatMsgDTO> res = new ArrayList<>();
+		ChatMsgDTO latestDateSign = new ChatMsgDTO();
 		int currentIndex = 0;
-		for(int i = 0; i < initialRes.size(); i++) {
-			ChatMessage msg = initialRes.get(i);
-			if(i == 0 || !(DateUtils.isSameDay(msg.getTimestamp(), initialRes.get(i - 1).getTimestamp()))) {
-				res.add(setDateSignMsg(currentIndex,dateFormat.format(msg.getTimestamp())));
-				currentIndex++;
+		for(int i = initialList.size()-1; i >= 0 ; i--) { 
+			 ChatMessage msg = initialList.get(i); 
+			 if(i == initialList.size()-1 || !(DateUtils.isSameDay(msg.getTimestamp(),initialList.get(i + 1).getTimestamp()))) { 
+				 ChatMsgDTO dateSign = setDateSignMsg(currentIndex,dateFormat.format(msg.getTimestamp()));
+				 latestDateSign.setMessageType(MSG_LATEST_DATE_SIGN);
+				 latestDateSign.setTimestamp(dateSign.getTimestamp());
+				 res.add(dateSign); 
+				 currentIndex++; 
 			}
-			res.add(setContentMsg(currentIndex, msg));
-			currentIndex++;
+			res.add(setContentMsg(currentIndex, msg)); 
+			currentIndex++; 
+		}
+		if(!initialList.isEmpty()) {
+			latestDateSign.setIndex(currentIndex);
+			res.add(latestDateSign);
 		}
 		return res;
 	}

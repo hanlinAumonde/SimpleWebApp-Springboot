@@ -11,4 +11,6 @@ public interface ChatMessageServiceInt {
 	public void saveMsgIntoCollection(long chatroomId, UserDTO sender, String content, Date timestamp);
 	
 	public List<ChatMsgDTO> getChatMessagesByChatroomId(long chatroomId);
+	
+	public List<ChatMsgDTO> getChatMessagesByChatroomIdByPage(long chatroomId, int page);
 }

@@ -4,6 +4,7 @@ import java.util.Date;
 
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.IndexDirection;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -17,6 +18,7 @@ public class ChatMessage {
 	private ObjectId id;
 	
 	@Field("chatroomId")
+	@Indexed
 	private long chatroomId;
 	
 	@Field("sender")
@@ -26,7 +28,7 @@ public class ChatMessage {
 	private String content;
 	
 	@Field("timestamp")
-	@Indexed
+	@Indexed(direction = IndexDirection.DESCENDING)
 	private Date timestamp;
 	
 	public ChatMessage() {
