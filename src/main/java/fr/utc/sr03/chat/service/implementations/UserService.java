@@ -43,7 +43,10 @@ public class UserService implements UserServiceInt {
     private ResetPasswordValidateRespository resetPasswordValidateRespository;
     
     private Pageable getPageableSetting(int page, int size) {
-    	return PageRequest.of(page,size, Sort.sort(User.class).by(User::getMail).ascending());
+    	// Sort by name firstly and then by lastname
+    	var sortConds = Sort.sort(User.class).by(User::getFirstName).ascending()
+	    			.and(Sort.sort(User.class).by(User::getLastName).ascending());
+    	return PageRequest.of(page,size, sortConds);//Sort.sort(User.class).by(User::getMail).ascending());
     }
 
     /**

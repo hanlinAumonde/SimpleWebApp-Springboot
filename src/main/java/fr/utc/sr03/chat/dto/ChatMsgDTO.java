@@ -2,6 +2,7 @@ package fr.utc.sr03.chat.dto;
 
 public class ChatMsgDTO {
 	private int index;
+	private long userId;
 	private String username;
 	private String message;
 	private String timestamp;
@@ -18,6 +19,14 @@ public class ChatMsgDTO {
 	
 	public void setIndex(int index) {
 		this.index = index;
+	}
+	
+	public long getUserId() {
+		return userId;
+	}
+	
+	public void setUserId(long userId) {
+		this.userId = userId;
 	}
 	
 	public String getUsername() {

@@ -10,7 +10,8 @@ import fr.utc.sr03.chat.model.User;
 import fr.utc.sr03.chat.service.implementations.ChatMessageService;
 import fr.utc.sr03.chat.service.implementations.UserService;
 import fr.utc.sr03.chat.service.utils.SpringContext;
-import fr.utc.sr03.chat.service.utils.RemoveChatroomEvent;
+import fr.utc.sr03.chat.service.utils.Events.ChangeChatroomMemberEvent;
+import fr.utc.sr03.chat.service.utils.Events.RemoveChatroomEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,14 @@ public class ChatServer {
 
     //on utilise ObjectMapper pour construire les messages en JSON
     private static final ObjectMapper mapper = new ObjectMapper();
+    
+    //on définit les différents types de messages
+    private static final int MESSAGE_CONNECT = 1;
+    private static final int MESSAGE_DISCONNECT = 2;
+    private static final int MESSAGE_TEXT = 0;
+    private static final int MESSAGE_REMOVE_CHATROOM = 3;
+    private static final int MESSAGE_ADD_CHATROOM_MEMBER = 4;
+    private static final int MESSAGE_REMOVE_CHATROOM_MEMBER = 5;
 
     //userInfo contient les informations de l'utilisateur qui ouvre la connexion WebSocket correspondante
     private UserDTO userInfo;
@@ -77,14 +86,14 @@ public class ChatServer {
             //on envoie un message de connexion à tous les utilisateurs connectés dans la chatroom correspondante
             Date now = new Date();
             broadcastMessage(
-                    setMessage(1,"",this.userInfo,now)
+                    setMessage(MESSAGE_CONNECT ,"",this.userInfo,now)
                     ,chatroomId
             );
             //Pour chaque utilisateur qui est déjà connecté dans le chatroom, on envoie un message de connexion à l'utilisateur qui ouvre la connexion
             for (Map.Entry<Session, UserDTO> entry : chatrooms.get(chatroomId).entrySet()) {
                 if(!entry.getKey().equals(session)){
                     sendMsgToMe(
-                            setMessage(1,"",entry.getValue(),now)
+                            setMessage(MESSAGE_CONNECT,"",entry.getValue(),now)
                             ,chatroomId
                     );
                 }
@@ -110,7 +119,7 @@ public class ChatServer {
         try{
             //on envoie un message de déconnexion à tous les utilisateurs connectés dans la chatroom correspondante
             broadcastMessageExceptSender(
-                    setMessage(2,"",this.userInfo,new Date())
+                    setMessage(MESSAGE_DISCONNECT,"",this.userInfo,new Date())
                     ,chatroomId
             );
             //on supprime la session de l'utilisateur de la chatroom correspondante, si la chatroom est vide, on la supprime
@@ -137,7 +146,7 @@ public class ChatServer {
         	chatMessageService.saveMsgIntoCollection(chatroomId, userInfo, message, now);
             //on envoie le message à tous les utilisateurs connectés dans la chatroom correspondante
             broadcastMessage(
-                    setMessage(0,message,this.userInfo,now)
+                    setMessage(MESSAGE_TEXT,message,this.userInfo,now)
                     ,chatroomId
             );
         }catch (Exception e){
@@ -163,7 +172,7 @@ public class ChatServer {
     	try {
     		long chatroomId = event.getEventMsg();
 	    	broadcastMessage(
-	    			setMessage(3,"This chatroom has been removed!",new UserDTO(),new Date()),
+	    			setMessage(MESSAGE_REMOVE_CHATROOM,"This chatroom has been removed!",new UserDTO(),new Date()),
 	    			chatroomId
 	    	);
 	    	if(chatrooms.containsKey(chatroomId)) chatrooms.remove(chatroomId);
@@ -171,6 +180,29 @@ public class ChatServer {
     		logger.error("Error while deleting users in chatroom " + event.getEventMsg());
             ex.printStackTrace();
     	}
+    }
+    
+	/*
+	 * cette methode surveille l'evenenment de changement des membres des chatrooms
+	 */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void changeChatroomMemberEventListener(ChangeChatroomMemberEvent event) {
+    	try {
+    		long chatroomId = event.getChatroomId();
+    		for(UserDTO user : event.getAddedMembers()) {
+    			broadcastMessage(
+    					setMessage(MESSAGE_ADD_CHATROOM_MEMBER,"A new user has joined the chatroom!", user, new Date()),
+    					chatroomId);
+    		}
+			for(UserDTO user : event.getRemovedMembers()) {
+				broadcastMessage(
+						setMessage(MESSAGE_REMOVE_CHATROOM_MEMBER, "A user has left the chatroom!", user, new Date()),
+						chatroomId);
+			}
+    	}catch(Exception ex) {
+    		logger.error("Error while updating users in chatroom " + event.getChatroomId());
+            ex.printStackTrace();
+        }
     }
 
     /**

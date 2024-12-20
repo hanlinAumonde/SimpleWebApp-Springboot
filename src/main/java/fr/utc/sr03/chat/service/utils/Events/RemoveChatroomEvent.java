@@ -1,9 +1,10 @@
-package fr.utc.sr03.chat.service.utils;
+package fr.utc.sr03.chat.service.utils.Events;
 
 import org.springframework.context.ApplicationEvent;
 
 public class RemoveChatroomEvent extends ApplicationEvent {
 	
+	private static final long serialVersionUID = -4118480440900563692L;
 	private long chatroomId;
 	
 	public RemoveChatroomEvent(long chatroomId) {

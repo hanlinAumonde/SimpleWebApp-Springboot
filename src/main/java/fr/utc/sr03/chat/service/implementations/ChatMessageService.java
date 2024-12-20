@@ -101,6 +101,7 @@ public class ChatMessageService implements ChatMessageServiceInt {
 	private ChatMsgDTO setContentMsg(int index, ChatMessage msg) {
 		ChatMsgDTO msgDTO = new ChatMsgDTO();
 		msgDTO.setIndex(index);
+		msgDTO.setUserId(msg.getUser().getId());
 		msgDTO.setUsername(msg.getUser().getFirstName() + " " + msg.getUser().getLastName());
 		msgDTO.setMessage(msg.getContent());
 		msgDTO.setTimestamp(timeFormat.format(msg.getTimestamp()));

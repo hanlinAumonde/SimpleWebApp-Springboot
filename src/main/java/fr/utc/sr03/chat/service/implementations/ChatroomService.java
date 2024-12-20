@@ -14,7 +14,8 @@ import fr.utc.sr03.chat.model.Chatroom;
 import fr.utc.sr03.chat.model.User;
 import fr.utc.sr03.chat.model.UserChatroomRelation;
 import fr.utc.sr03.chat.service.interfaces.ChatroomServiceInt;
-import fr.utc.sr03.chat.service.utils.RemoveChatroomEvent;
+import fr.utc.sr03.chat.service.utils.Events.ChangeChatroomMemberEvent;
+import fr.utc.sr03.chat.service.utils.Events.RemoveChatroomEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -182,6 +183,8 @@ public class ChatroomService implements ChatroomServiceInt {
             userChatroomRelationRepository.delete(
                 userChatroomRelationRepository.findByChatroomIdAndUserId(chatroomId, userId).get()
             );
+            UserDTO user = userRepository.findById(userId).map(DTOMapper::toUserDTO).get();
+            publisher.publishEvent(new ChangeChatroomMemberEvent(chatroomId, List.of(), List.of(user)));
             return true;
         }catch (Exception e){
             logger.error("Error while deleting user with id " + userId + " from chatroom with id " + chatroomId + " : " + e.getMessage());
@@ -237,6 +240,11 @@ public class ChatroomService implements ChatroomServiceInt {
             if(isChanged){
                 chatRoomRepository.save(chatroom);
             }
+            publisher.publishEvent(
+            		new ChangeChatroomMemberEvent(chatroomId,
+												  chatroomRequestDTO.getListAddedUsers(),
+												  chatroomRequestDTO.getListRemovedUsers()
+		    ));
             return true;
         }catch (RuntimeException e){
             logger.error("Error while updating chatroom with id " + chatroomId + " : " + e.getMessage());

@@ -1,13 +1,13 @@
 package fr.utc.sr03.chat.controller;
 
-
-import fr.utc.sr03.chat.model.ResetPasswordValidate;
 import fr.utc.sr03.chat.model.User;
 import fr.utc.sr03.chat.model.UserChatroomRelation;
 import fr.utc.sr03.chat.service.implementations.ChatroomService;
 import fr.utc.sr03.chat.service.implementations.ResetPasswordValidateService;
 import fr.utc.sr03.chat.service.implementations.UserChatroomRelationService;
 import fr.utc.sr03.chat.service.implementations.UserService;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -23,7 +23,9 @@ import java.util.List;
 public class AdminController {
 
     //le nombre de chatrooms par page défault
-    private static final int defaultPageSize = 5;
+	@Value("${DefaultPageSize_Users}")
+    private int defaultPageSize;
+	
     @Resource
     private UserService userService;
 
