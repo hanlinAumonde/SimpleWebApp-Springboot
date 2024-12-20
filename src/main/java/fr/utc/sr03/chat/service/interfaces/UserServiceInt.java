@@ -14,21 +14,21 @@ import java.util.Optional;
 public interface UserServiceInt {
 
     UserDTO getLoggedUser();
-    Page<User> findAllUsersByPage(int page, int size);
+    Page<User> findAllUsersByPage(int page);
 
     boolean addUser(User user);
 
-    Page<User> findAllUsersNotAdminByPage(int page, int size);
+    Page<User> findAllUsersNotAdminByPage(int page);
 
-    Page<UserDTO> findAllOtherUsersNotAdminByPage(int page, int size, long userId);
+    Page<UserDTO> findAllOtherUsersNotAdminByPage(int page, long userId);
 
-    Page<UserDTO> findUsersInvitedToChatroomByPage(long chatroomId, int page, int size);
+    Page<UserDTO> findUsersInvitedToChatroomByPage(long chatroomId, int page);
 
-    Page<UserDTO> findUsersNotInvitedToChatroomByPage(long chatroomId, int page, int size);
+    Page<UserDTO> findUsersNotInvitedToChatroomByPage(long chatroomId, int page);
 
     void deleteUserById(Long id);
 
-    Page<User> findAllInactiveUsersByPage(int page, int size);
+    Page<User> findAllInactiveUsersByPage(int page);
 
     void setStatusOfUser(long userId,boolean status);
 

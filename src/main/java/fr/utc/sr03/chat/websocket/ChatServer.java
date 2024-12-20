@@ -12,10 +12,15 @@ import fr.utc.sr03.chat.service.implementations.UserService;
 import fr.utc.sr03.chat.service.utils.SpringContext;
 import fr.utc.sr03.chat.service.utils.Events.ChangeChatroomMemberEvent;
 import fr.utc.sr03.chat.service.utils.Events.RemoveChatroomEvent;
+import static fr.utc.sr03.chat.service.utils.ConstantValues.MESSAGE_TEXT;
+import static fr.utc.sr03.chat.service.utils.ConstantValues.MESSAGE_CONNECT;
+import static fr.utc.sr03.chat.service.utils.ConstantValues.MESSAGE_DISCONNECT;
+import static fr.utc.sr03.chat.service.utils.ConstantValues.MESSAGE_REMOVE_CHATROOM;
+import static fr.utc.sr03.chat.service.utils.ConstantValues.MESSAGE_ADD_CHATROOM_MEMBER;
+import static fr.utc.sr03.chat.service.utils.ConstantValues.MESSAGE_REMOVE_CHATROOM_MEMBER;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -45,14 +50,6 @@ public class ChatServer {
 
     //on utilise ObjectMapper pour construire les messages en JSON
     private static final ObjectMapper mapper = new ObjectMapper();
-    
-    //on définit les différents types de messages
-    private static final int MESSAGE_CONNECT = 1;
-    private static final int MESSAGE_DISCONNECT = 2;
-    private static final int MESSAGE_TEXT = 0;
-    private static final int MESSAGE_REMOVE_CHATROOM = 3;
-    private static final int MESSAGE_ADD_CHATROOM_MEMBER = 4;
-    private static final int MESSAGE_REMOVE_CHATROOM_MEMBER = 5;
 
     //userInfo contient les informations de l'utilisateur qui ouvre la connexion WebSocket correspondante
     private UserDTO userInfo;

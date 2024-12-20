@@ -16,6 +16,7 @@ import fr.utc.sr03.chat.model.UserChatroomRelation;
 import fr.utc.sr03.chat.service.interfaces.ChatroomServiceInt;
 import fr.utc.sr03.chat.service.utils.Events.ChangeChatroomMemberEvent;
 import fr.utc.sr03.chat.service.utils.Events.RemoveChatroomEvent;
+import static fr.utc.sr03.chat.service.utils.ConstantValues.DefaultPageSize_Chatrooms;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,14 +108,14 @@ public class ChatroomService implements ChatroomServiceInt {
      * Cette méthode permet de trouver les chatrooms crées/joints par un utilisateur en Page(size = 5)
      */
     @Transactional(readOnly = true)
-    private Page<Chatroom> getChatroomsOwnedOrJoinedOfUserByPage(long userId, boolean isOwner, int page, int size) {
-        Pageable pageable = PageRequest.of(page,size, Sort.sort(Chatroom.class).by(Chatroom::getTitre).ascending());
+    private Page<Chatroom> getChatroomsOwnedOrJoinedOfUserByPage(long userId, boolean isOwner, int page) {
+        Pageable pageable = PageRequest.of(page, DefaultPageSize_Chatrooms, Sort.sort(Chatroom.class).by(Chatroom::getTitre).ascending());
         return chatRoomRepository.findChatroomsOwnedOrJoinedOfUserByPage(userId,isOwner,pageable);
     }
     
     @Override
-	public Page<ChatroomDTO> getChatroomsOwnedOfUserByPage(long userId, int page, int size) {
-		Page<Chatroom> chatrooms = getChatroomsOwnedOrJoinedOfUserByPage(userId, true, page, size);
+	public Page<ChatroomDTO> getChatroomsOwnedOfUserByPage(long userId, int page) {
+		Page<Chatroom> chatrooms = getChatroomsOwnedOrJoinedOfUserByPage(userId, true, page);
 		return chatrooms.map(chatroom -> {
 			return DTOMapper.toChatroomDTO(chatroom, chatroom.isActive() && !chatroom.hasNotStarted());
 		});
@@ -122,8 +123,8 @@ public class ChatroomService implements ChatroomServiceInt {
     
     @Transactional(readOnly = true)
     @Override
-	public Page<ChatroomWithOwnerAndStatusDTO> getChatroomsJoinedOfUserByPage(long userId, boolean isOwner, int page, int size) {
-    	Page<Chatroom> chatrooms = getChatroomsOwnedOrJoinedOfUserByPage(userId, isOwner, page, size);
+	public Page<ChatroomWithOwnerAndStatusDTO> getChatroomsJoinedOfUserByPage(long userId, boolean isOwner, int page) {
+    	Page<Chatroom> chatrooms = getChatroomsOwnedOrJoinedOfUserByPage(userId, isOwner, page);
     	return chatrooms.map(chatroom -> {
     		User owner = userRepository.findById(
     				userChatroomRelationService.findOwnerOfChatroom(chatroom.getId()).get().getUserId()

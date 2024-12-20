@@ -19,8 +19,6 @@ public class ResetPasswordValidateService implements ResetPasswordValidateServic
     @Autowired
     private ResetPasswordValidateRespository resetPasswordValidateRespository;
     
-    @Autowired
-    private UserRepository userRepository; 
     /**
      * Cette méthode permet de trouver le validate correspondant au token passé en paramètre
      */

@@ -14,7 +14,6 @@ import fr.utc.sr03.chat.service.implementations.UserService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 
@@ -34,14 +33,6 @@ import java.util.Optional;
 public class UserWebServiceController {
 
     private final Logger logger = LoggerFactory.getLogger(UserWebServiceController.class);
-
-    //le nombre de users par page défault
-    @Value("${DefaultPageSize_Users}")
-    private int defaultPageSize_Users;
-    
-    //le nombre de chatrooms par page défault
-    @Value("${DefaultPageSize_Chatrooms}")
-    private int defaultPageSize_Chatrooms;
 
     @Resource
     private UserService userService;
@@ -86,7 +77,7 @@ public class UserWebServiceController {
     @GetMapping("/user/users/other")
     public ResponseEntity<Page<UserDTO>> getOtherUsers(@RequestParam(defaultValue ="0")int page){
         if(userService.checkUserLoginStatus()){
-            Page<UserDTO> users = userService.findAllOtherUsersNotAdminByPage(page, defaultPageSize_Users, userService.getLoggedUser().getId());
+            Page<UserDTO> users = userService.findAllOtherUsersNotAdminByPage(page, userService.getLoggedUser().getId());
             return ResponseEntity.ok(users);
         }
         return ResponseEntity.status(401).body(Page.empty());
@@ -116,7 +107,7 @@ public class UserWebServiceController {
     @GetMapping("/user/users/{userId}/chatrooms/owned")
     public ResponseEntity<Page<ChatroomDTO>> getChatroomsOwnedByUser(@PathVariable long userId, @RequestParam(defaultValue = "0")int page){
         if(userService.checkUserLoginStatus() && userId == userService.getLoggedUser().getId()){
-            Page<ChatroomDTO> chatrooms = chatroomService.getChatroomsOwnedOfUserByPage(userId,page,defaultPageSize_Chatrooms);
+            Page<ChatroomDTO> chatrooms = chatroomService.getChatroomsOwnedOfUserByPage(userId,page);
         	return ResponseEntity.ok(chatrooms);
         }
         return ResponseEntity.status(401).body(Page.empty());
@@ -128,7 +119,7 @@ public class UserWebServiceController {
     @GetMapping("/user/users/{userId}/chatrooms/joined")
     public ResponseEntity<Page<ChatroomWithOwnerAndStatusDTO>> getChatroomsJoinedByUser(@PathVariable long userId, @RequestParam(defaultValue = "0")int page){
     	if(userService.checkUserLoginStatus() && userId == userService.getLoggedUser().getId()){
-    		return ResponseEntity.ok(chatroomService.getChatroomsJoinedOfUserByPage(userId, false, page, defaultPageSize_Chatrooms));
+    		return ResponseEntity.ok(chatroomService.getChatroomsJoinedOfUserByPage(userId, false, page));
     	}
     	return ResponseEntity.status(401).body(Page.empty());
     }
@@ -172,7 +163,7 @@ public class UserWebServiceController {
     public ResponseEntity<Page<UserDTO>> getUsersInvitedInChatroom(@PathVariable long chatroomId, @RequestParam(defaultValue="0")int page){
         boolean checkOwner = chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),chatroomId);
         if(userService.checkUserLoginStatus() && checkOwner){
-            Page<UserDTO> users = userService.findUsersInvitedToChatroomByPage(chatroomId,page,defaultPageSize_Users);
+            Page<UserDTO> users = userService.findUsersInvitedToChatroomByPage(chatroomId,page);
             return ResponseEntity.ok(users);
         }else if(!checkOwner){
             return ResponseEntity.status(403).body(Page.empty());
@@ -189,7 +180,7 @@ public class UserWebServiceController {
     public ResponseEntity<Page<UserDTO>> getUsersNotInvitedInChatroom(@PathVariable long chatroomId, @RequestParam(defaultValue="0")int page){
         boolean checkOwner = chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),chatroomId);
         if(userService.checkUserLoginStatus() && checkOwner){
-            Page<UserDTO> users = userService.findUsersNotInvitedToChatroomByPage(chatroomId,page,defaultPageSize_Users);
+            Page<UserDTO> users = userService.findUsersNotInvitedToChatroomByPage(chatroomId,page);
             return ResponseEntity.ok(users);
         }else if(!checkOwner){
             return ResponseEntity.status(403).body(Page.empty());

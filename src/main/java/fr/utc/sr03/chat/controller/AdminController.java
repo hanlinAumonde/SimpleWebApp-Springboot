@@ -7,7 +7,6 @@ import fr.utc.sr03.chat.service.implementations.ResetPasswordValidateService;
 import fr.utc.sr03.chat.service.implementations.UserChatroomRelationService;
 import fr.utc.sr03.chat.service.implementations.UserService;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -21,10 +20,6 @@ import java.util.List;
 @Controller
 @RequestMapping(value="/admin")
 public class AdminController {
-
-    //le nombre de chatrooms par page défault
-	@Value("${DefaultPageSize_Users}")
-    private int defaultPageSize;
 	
     @Resource
     private UserService userService;
@@ -47,7 +42,7 @@ public class AdminController {
     @GetMapping("/adminAccueil")
     public String getAdminAccueil(Model adminPage, @RequestParam(defaultValue = "0") int page ,@AuthenticationPrincipal User admin) {
         //List<User> users = userService.findAllUsers();
-        Page<User> users = userService.findAllUsersByPage(page,defaultPageSize);
+        Page<User> users = userService.findAllUsersByPage(page);
         adminPage.addAttribute("admin",admin);
         adminPage.addAttribute("users",users);
         return "adminPage";
@@ -89,7 +84,7 @@ public class AdminController {
     public String getDeleteUserForm(Model model,@RequestParam(defaultValue = "0")int page ,@AuthenticationPrincipal User admin) {
         model.addAttribute("admin",admin);
         //List<User> users = userService.findAllUsersNotAdmin();
-        Page<User> users = userService.findAllUsersNotAdminByPage(page,defaultPageSize);
+        Page<User> users = userService.findAllUsersNotAdminByPage(page);
         model.addAttribute("users",users);
         return "adminSuppressionUserPage";
     }
@@ -118,7 +113,7 @@ public class AdminController {
     public String getActivationUserForm(Model model,@RequestParam(defaultValue = "0")int page ,@AuthenticationPrincipal User admin) {
         model.addAttribute("admin",admin);
         //List<User> usersDesactive = userService.findAllInactiveUsers();
-        Page<User> usersDesactive = userService.findAllInactiveUsersByPage(page,defaultPageSize);
+        Page<User> usersDesactive = userService.findAllInactiveUsersByPage(page);
         model.addAttribute("users",usersDesactive);
         return "adminUserActivationPage";
     }

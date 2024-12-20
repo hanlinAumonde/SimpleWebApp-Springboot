@@ -19,11 +19,9 @@ public interface ChatroomServiceInt {
 
     boolean createChatroom(ChatroomRequestDTO chatroomRequestDTO, long userId);
 
-    //Page<Chatroom> getChatroomsOwnedOrJoinedOfUserByPage(long userId, boolean isOwner, int page, int size);
-
-    Page<ChatroomDTO> getChatroomsOwnedOfUserByPage(long userId, int page, int size);
+    Page<ChatroomDTO> getChatroomsOwnedOfUserByPage(long userId, int page);
     
-    Page<ChatroomWithOwnerAndStatusDTO> getChatroomsJoinedOfUserByPage(long userId, boolean isOwner, int page, int size);
+    Page<ChatroomWithOwnerAndStatusDTO> getChatroomsJoinedOfUserByPage(long userId, boolean isOwner, int page);
     
     List<UserDTO> getAllUsersInChatroom(long chatroomId);
 

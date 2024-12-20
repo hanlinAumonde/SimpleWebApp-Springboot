@@ -4,7 +4,8 @@ import fr.utc.sr03.chat.model.User;
 import fr.utc.sr03.chat.service.implementations.ChatroomService;
 import fr.utc.sr03.chat.service.implementations.UserChatroomRelationService;
 import fr.utc.sr03.chat.service.implementations.UserService;
-import fr.utc.sr03.chat.service.utils.WithoutPasswordEncoder;
+//import fr.utc.sr03.chat.service.utils.WithoutPasswordEncoder;
+import static fr.utc.sr03.chat.service.utils.ConstantValues.MAX_FAILED_ATTEMPTS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,7 @@ import java.util.Optional;
 public class AccountAuthenticationProvider implements AuthenticationProvider {
 
     private final Logger logger = LoggerFactory.getLogger(AccountAuthenticationProvider.class);
-    private static final int MAX_FAILED_ATTEMPTS = 5;
+
     @Autowired
     @Lazy
     private PasswordEncoder passwordEncoder;

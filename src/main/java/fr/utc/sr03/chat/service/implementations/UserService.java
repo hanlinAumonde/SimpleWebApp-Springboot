@@ -7,6 +7,7 @@ import fr.utc.sr03.chat.dto.UserDTO;
 import fr.utc.sr03.chat.model.ResetPasswordValidate;
 import fr.utc.sr03.chat.model.User;
 import fr.utc.sr03.chat.service.interfaces.UserServiceInt;
+import static fr.utc.sr03.chat.service.utils.ConstantValues.DefaultPageSize_Users;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -42,19 +43,18 @@ public class UserService implements UserServiceInt {
     @Autowired
     private ResetPasswordValidateRespository resetPasswordValidateRespository;
     
-    private Pageable getPageableSetting(int page, int size) {
-    	// Sort by name firstly and then by lastname
+    private Pageable getPageableSetting(int page) {
     	var sortConds = Sort.sort(User.class).by(User::getFirstName).ascending()
 	    			.and(Sort.sort(User.class).by(User::getLastName).ascending());
-    	return PageRequest.of(page,size, sortConds);//Sort.sort(User.class).by(User::getMail).ascending());
+    	return PageRequest.of(page, DefaultPageSize_Users, sortConds);
     }
 
     /**
      * Cette méthode permet de trouver tous les utilisateurs en page
      */
     @Override
-    public Page<User> findAllUsersByPage(int page, int size) {
-        return userRepository.findAll(this.getPageableSetting(page, size));
+    public Page<User> findAllUsersByPage(int page) {
+        return userRepository.findAll(this.getPageableSetting(page));
     }
 
     /**
@@ -89,8 +89,8 @@ public class UserService implements UserServiceInt {
      * Elle est utilisée dans la page d'administration - suppression d'un utilisateur
      */
     @Override
-    public Page<User> findAllUsersNotAdminByPage(int page, int size){
-        return userRepository.findByAdmin(false,this.getPageableSetting(page, size));
+    public Page<User> findAllUsersNotAdminByPage(int page){
+        return userRepository.findByAdmin(false,this.getPageableSetting(page));
     }
 
     /**
@@ -98,8 +98,8 @@ public class UserService implements UserServiceInt {
      * Elle est utilisée dans la page User pour donner l'utilisateur une liste des utilisateurs qu'il peut ajouter à un chatroom
      */
     @Override
-    public Page<UserDTO> findAllOtherUsersNotAdminByPage(int page, int size, long userId){
-        return userRepository.findAllOtherUsersNotAdminByPage(userId,this.getPageableSetting(page, size))
+    public Page<UserDTO> findAllOtherUsersNotAdminByPage(int page, long userId){
+        return userRepository.findAllOtherUsersNotAdminByPage(userId,this.getPageableSetting(page))
         		.map(DTOMapper::toUserDTO);
     }
 
@@ -107,8 +107,8 @@ public class UserService implements UserServiceInt {
      * Cette méthode permet de trouver les utilisateurs invités à un chatroom
      */
     @Override
-    public Page<UserDTO> findUsersInvitedToChatroomByPage(long chatroomId, int page, int size) {
-        return userRepository.findUsersInvitedToChatroomByPage(chatroomId,this.getPageableSetting(page, size))
+    public Page<UserDTO> findUsersInvitedToChatroomByPage(long chatroomId, int page) {
+        return userRepository.findUsersInvitedToChatroomByPage(chatroomId,this.getPageableSetting(page))
         		.map(DTOMapper::toUserDTO);
     }
 
@@ -116,8 +116,8 @@ public class UserService implements UserServiceInt {
      * Cette méthode permet de trouver les utilisateurs qui ne sont pas invités à un chatroom
      */
     @Override
-    public Page<UserDTO> findUsersNotInvitedToChatroomByPage(long chatroomId, int page, int size) {
-        return userRepository.findUsersNotInvitedToChatroomByPage(chatroomId,this.getPageableSetting(page, size))
+    public Page<UserDTO> findUsersNotInvitedToChatroomByPage(long chatroomId, int page) {
+        return userRepository.findUsersNotInvitedToChatroomByPage(chatroomId,this.getPageableSetting(page))
         		.map(DTOMapper::toUserDTO);
     }
 
@@ -135,8 +135,8 @@ public class UserService implements UserServiceInt {
      * Cette méthode permet de trouver tous les utilisateurs désactivés
      */
     @Override
-    public Page<User> findAllInactiveUsersByPage(int page, int size) {
-        return userRepository.findByActive(false,this.getPageableSetting(page, size));
+    public Page<User> findAllInactiveUsersByPage(int page) {
+        return userRepository.findByActive(false,this.getPageableSetting(page));
     }
 
     /**
