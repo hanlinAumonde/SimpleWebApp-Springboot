@@ -45,7 +45,7 @@ public class UserWebServiceController {
     
     @Resource
     private ChatMessageService chatMessageService;
-
+    
     //Pour tous les méthodes ici, on va d'abord vérifier si l'utilisateur est connecté,
     //sinon on va retourner un code 401 (non autorisé), ce qui va permettre au front-end de rediriger l'utilisateur vers la page de login
 
@@ -67,7 +67,7 @@ public class UserWebServiceController {
             request.getSession().invalidate();
             logger.info("user {} a ete supprime par l'admin", auth.getName());
         }
-        return ResponseEntity.status(401).body(new UserDTO());
+		return ResponseEntity.status(200/* 401 */).body(new UserDTO());
     }
 
     /**

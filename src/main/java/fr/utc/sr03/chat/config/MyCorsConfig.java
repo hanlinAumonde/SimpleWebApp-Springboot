@@ -10,16 +10,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MyCorsConfig {
 	
-	@Value("${FrontEndURL}")
-	private String frontEndUrl;
-	
     /**
      * Configuration du CORS pour le projet Reactjs / Angular
      */
     @Bean
     public CorsFilter corsFilter(){
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.addAllowedOrigin(frontEndUrl);
+        corsConfiguration.addAllowedOriginPattern("*");
         corsConfiguration.addAllowedHeader("*");
         corsConfiguration.addAllowedMethod("*");
         corsConfiguration.setAllowCredentials(true);
