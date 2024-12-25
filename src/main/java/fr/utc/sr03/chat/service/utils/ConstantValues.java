@@ -28,6 +28,14 @@ public final class ConstantValues {
     public static final String MSG_CONTENT = "content";
     public static final String MSG_LATEST_DATE_SIGN = "latestDateSign";
     
+    //Chat server endpoint
+    public static final String CHAT_ENDPOINT = "/chatroom/{chatroomId}/user/{userId}";
+ 
+    // WebSocket broadcast types
+    public static final String TO_ALL_IN_CHATROOM = "toAll";
+    public static final String TO_SELF_IN_CHATROOM = "toSelf";
+    public static final String TO_OTHERS_IN_CHATROOM = "toOthers";
+    
     // Message types for websocket
     public static final int MESSAGE_TEXT = 0;
     public static final int MESSAGE_CONNECT = 1;
