@@ -5,8 +5,11 @@ import java.time.format.DateTimeFormatter;
 
 public final class ConstantValues {
 	
-	private ConstantValues() {
-	}
+	private ConstantValues() {}
+	
+	// Msg for creation of user compte
+	public static final String CreationSuccess = "create compte";
+	public static final String CompteExist = "compte already exists";
 	
 	// Default page size for pagination
 	public static final int DefaultPageSize_Users = 5;

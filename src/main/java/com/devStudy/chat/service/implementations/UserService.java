@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.devStudy.chat.dao.ResetPasswordValidateRespository;
 import com.devStudy.chat.dao.UserRepository;
+import com.devStudy.chat.dto.CreateCompteDTO;
 import com.devStudy.chat.dto.DTOMapper;
 import com.devStudy.chat.dto.UserDTO;
 import com.devStudy.chat.model.ResetPasswordValidate;
@@ -28,6 +29,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 import static com.devStudy.chat.service.utils.ConstantValues.DefaultPageSize_Users;
+import static com.devStudy.chat.service.utils.ConstantValues.CreationSuccess;
+import static com.devStudy.chat.service.utils.ConstantValues.CompteExist;
 
 import java.util.List;
 import java.util.Optional;
@@ -82,17 +85,25 @@ public class UserService implements UserServiceInt {
      * Cette méthode permet d'ajouter un utilisateur
      * Si l'utilisateur existe déjà, on retourne false, sinon on l'ajoute et on retourne true
      */
+    @Transactional
     @Override
-    public boolean addUser(User user) {
+    public CreateCompteDTO addUser(CreateCompteDTO user) {
         List<User> users = userRepository.findAll();
         for(User u : users){
-            if(u.equals(user)){
-                return false;
+            if(u.getMail() == user.getMail()){
+                user.setCreateMsg(CompteExist);
+                return user;
             }
         }
-        user.setPwd(passwordEncoder.encode(user.getPwd()));
-        userRepository.save(user);
-        return true;
+        User newUser = new User();
+        newUser.setFirstName(user.getFirstName());
+        newUser.setLastName(user.getLastName());
+        newUser.setMail(user.getMail());
+        newUser.setPwd(passwordEncoder.encode(user.getPassword()));
+        newUser.setAdmin(false);
+        userRepository.save(newUser);
+        user.setCreateMsg(CreationSuccess);
+        return user;
     }
 
     /**

@@ -1,15 +1,12 @@
 package com.devStudy.chat.service.interfaces;
 
 import org.springframework.data.domain.Page;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
+import com.devStudy.chat.dto.CreateCompteDTO;
 import com.devStudy.chat.dto.UserDTO;
 import com.devStudy.chat.model.User;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.swing.text.html.Option;
-import java.util.List;
 import java.util.Optional;
 
 public interface UserServiceInt {
@@ -17,7 +14,7 @@ public interface UserServiceInt {
     UserDTO getLoggedUser();
     Page<User> findAllUsersByPage(int page);
 
-    boolean addUser(User user);
+    CreateCompteDTO addUser(CreateCompteDTO user);
 
     Page<User> findAllUsersNotAdminByPage(int page);
 

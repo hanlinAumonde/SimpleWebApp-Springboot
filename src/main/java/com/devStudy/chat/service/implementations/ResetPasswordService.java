@@ -5,11 +5,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.devStudy.chat.dao.ResetPasswordValidateRespository;
-import com.devStudy.chat.dto.ResponseDTO;
 import com.devStudy.chat.model.ResetPasswordValidate;
 import com.devStudy.chat.model.User;
 import com.devStudy.chat.service.interfaces.ResetPasswordServiceInt;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,18 +28,17 @@ public class ResetPasswordService implements ResetPasswordServiceInt {
     private UserService userService;
     
     @Override
-	public ResponseDTO sendResetPasswordEmail(String email, HttpServletRequest request) {
+	public Map<String, String> sendResetPasswordEmail(String email, HttpServletRequest request) {
     	Optional<User> userFound = userService.findUserByEmail(email);
-    	ResponseDTO res = new ResponseDTO();
+    	//ResponseDTO res = new ResponseDTO();
+    	Map<String, String> res = new HashMap<>();
 		if (userFound.isPresent()) {
 			User user = userFound.get();
 			userService.sendResetPasswordEmail(user, request);
-			res.setStatus("scuccess");
-			res.setMsg("un mail de réinitialisation de mot de passe a été envoyé à l'adresse " + email
+			res.put("scuccess", "un mail de réinitialisation de mot de passe a été envoyé à l'adresse " + email
 					+ ", veuillez cliquer sur le lien contenu dans le mail pour réinitialiser votre mot de passe");
 		} else {
-			res.setStatus("error");
-			res.setMsg("aucun utilisateur n'est enregistré avec l'adresse " + email + ", veuillez réessayer");
+			res.put("error", "aucun utilisateur n'est enregistré avec l'adresse " + email + ", veuillez réessayer");
 		}
 		return res;
 	}

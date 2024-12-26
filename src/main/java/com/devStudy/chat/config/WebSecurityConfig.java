@@ -1,26 +1,19 @@
 package com.devStudy.chat.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
-import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
-import org.springframework.security.config.http.CorsBeanDefinitionParser;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 
 import com.devStudy.chat.security.AccountAuthenticationFailureHandler;
 import com.devStudy.chat.security.AccountAuthenticationProvider;
@@ -65,27 +58,25 @@ public class WebSecurityConfig {
                 
                 .authorizeRequests(auth -> 
                 	auth
-                		.antMatchers("/user/**").hasRole("USER")
-                        .antMatchers("/users/logged", "/reset-password/**").permitAll()
+                		.antMatchers("/api/users/**","/api/chatrooms/**").hasRole("USER")
+                        .antMatchers("/api/login/**").permitAll()
                         .antMatchers("ws://localhost:8080/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )
 
                 .formLogin(formLogin -> 
                 	formLogin
-						.loginProcessingUrl("/login-check")
+						.loginProcessingUrl("/api/login/login-process")
 						.successHandler(new AccountAuthenticationSuccessHandler())
 						.failureHandler(new AccountAuthenticationFailureHandler())
-						.permitAll()
                 )
                 
                 .logout(logout -> 
                     logout
-	                    .logoutUrl("/logout")
+	                    .logoutUrl("/api/login/logout")
 	                    .invalidateHttpSession(true)
 	                    .clearAuthentication(true)
 	                    .logoutSuccessHandler(new AccountLogoutSuccessHandler())
-	                    .permitAll()
                 );
         return http.build();
     }
