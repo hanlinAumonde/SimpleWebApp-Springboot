@@ -1,16 +1,26 @@
 package com.devStudy.chat.model;
 
-import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
 @Entity
 @Table(name = "chatrooms")
 public class Chatroom {
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY) // strategy=GenerationType.IDENTITY => obligatoire pour auto increment mysql
+    @GeneratedValue(strategy=GenerationType.IDENTITY)
     private long id;
 
     @Column(name = "titre")
@@ -28,14 +38,13 @@ public class Chatroom {
     @Column(name = "is_active")
     private boolean active;
     
-	/*
-	 * @ManyToOne(fetch = FetchType.LAZY)
-	 * 
-	 * @JoinColumn(name = "creator_id", nullable = false) private User creator;
-	 * 
-	 * @ManyToMany(mappedBy = "joinedRooms") private Set<User> members = new
-	 * HashSet<>();
-	 */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_id", nullable = false) 
+    private User creator;
+
+    @ManyToMany(mappedBy = "joinedRooms", fetch = FetchType.LAZY) 
+    private Set<User> members = new HashSet<>();
+
 
     public Chatroom(){}
 
@@ -82,6 +91,22 @@ public class Chatroom {
     public boolean isActive() { return active; }
 
     public void setActive(boolean active) { this.active = active; }
+    
+	public User getCreator() {
+		return creator;
+	}
+	
+	public void setCreator(User creator) {
+		this.creator = creator;
+	}
+	
+	public Set<User> getMembers() {
+		return members;
+	}
+	
+	public void setMembers(Set<User> members) {
+		this.members = members;
+	}
 
     public boolean hasNotStarted() {
         return LocalDateTime.now().isBefore(this.horaireCommence);
@@ -94,12 +119,12 @@ public class Chatroom {
 
         Chatroom chatroom = (Chatroom) obj;
 
-        return titre.equals(chatroom.titre) && description.equals(chatroom.description);
+        return id == chatroom.id;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(titre, description);
+        return Objects.hash(id);
     }
 
 }

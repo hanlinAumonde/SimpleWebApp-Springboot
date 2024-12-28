@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 
 import com.devStudy.chat.model.User;
 import com.devStudy.chat.service.implementations.ChatroomService;
-import com.devStudy.chat.service.implementations.UserChatroomRelationService;
 import com.devStudy.chat.service.implementations.UserService;
 
 import javax.annotation.Resource;
@@ -42,9 +41,6 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
 
     @Resource
     private ChatroomService chatroomService;
-
-    @Resource
-    private UserChatroomRelationService userChatroomRelationService;
 
     /**
      * Ce méthode est appelée par le filtre d'authentification pour authentifier l'utilisateur.
@@ -81,13 +77,8 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
             int attempts = account.get().getFailedAttempts() + 1;
             if (attempts >= MAX_FAILED_ATTEMPTS) {
                 userService.lockUserAndResetFailedAttempts(account.get().getId());
-                /*
-                  modifier le status de tous les chatrooms appartenant(non invité) à cet utilisateur à false
-                */
                 if(!account.get().isAdmin()){
-                    userChatroomRelationService.findRelationsOfUser(account.get().getId())
-                            .forEach(userChatroomRelation ->
-                                    chatroomService.setStatusOfChatroom(userChatroomRelation.getChatroomId(),false));
+                    //TODO: quand un user est bloqué, ses chatrooms vont etre transferees à un autre user
                 }
                 logger.info("Trops de tentatives malveillantes, votre compte est blouqé");
                 throw new BadCredentialsException("Trops de tentatives malveillantes, votre compte est blouqé");

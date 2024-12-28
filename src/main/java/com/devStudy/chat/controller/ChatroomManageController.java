@@ -13,7 +13,6 @@ import com.devStudy.chat.dto.ModifyChatroomRequestDTO;
 import com.devStudy.chat.dto.UserDTO;
 import com.devStudy.chat.service.implementations.ChatMessageService;
 import com.devStudy.chat.service.implementations.ChatroomService;
-import com.devStudy.chat.service.implementations.UserChatroomRelationService;
 import com.devStudy.chat.service.implementations.UserService;
 
 import javax.annotation.Resource;
@@ -32,9 +31,6 @@ public class ChatroomManageController {
 
 	@Resource
 	private ChatroomService chatroomService;
-
-	@Resource
-	private UserChatroomRelationService userChatroomRelationService;
 
 	@Resource
 	private ChatMessageService chatMessageService;
@@ -127,10 +123,10 @@ public class ChatroomManageController {
 	@GetMapping("/{chatroomId}/users/not-invited")
 	public ResponseEntity<Page<UserDTO>> getUsersNotInvitedInChatroom(@PathVariable long chatroomId,
 			@RequestParam(defaultValue = "0") int page) {
-		boolean checkOwner = chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),
-				chatroomId);
+		long userId = userService.getLoggedUser().getId();
+		boolean checkOwner = chatroomService.checkUserIsOwnerOfChatroom(userId,chatroomId);
 		if (userService.checkUserLoginStatus() && checkOwner) {
-			Page<UserDTO> users = userService.findUsersNotInvitedToChatroomByPage(chatroomId, page);
+			Page<UserDTO> users = userService.findUsersNotInvitedToChatroomByPage(chatroomId, userId, page);
 			return ResponseEntity.ok(users);
 		} else if (!checkOwner) {
 			return ResponseEntity.status(403).body(Page.empty());

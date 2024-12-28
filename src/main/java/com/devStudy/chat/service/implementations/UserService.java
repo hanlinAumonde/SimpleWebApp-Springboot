@@ -138,8 +138,8 @@ public class UserService implements UserServiceInt {
      * Cette méthode permet de trouver les utilisateurs qui ne sont pas invités à un chatroom
      */
     @Override
-    public Page<UserDTO> findUsersNotInvitedToChatroomByPage(long chatroomId, int page) {
-        return userRepository.findUsersNotInvitedToChatroomByPage(chatroomId,this.getPageableSetting(page))
+    public Page<UserDTO> findUsersNotInvitedToChatroomByPage(long chatroomId, long userId, int page) {
+        return userRepository.findUsersNotInvitedToChatroomByPage(chatroomId, userId, this.getPageableSetting(page))
         		.map(DTOMapper::toUserDTO);
     }
 

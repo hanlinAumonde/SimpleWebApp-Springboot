@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.devStudy.chat.model.User;
 
@@ -41,10 +42,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findAllOtherUsersNotAdminByPage(long userId, Pageable pageable);
 
     //Cette méthode permet de trouver tous les utilisateurs qui ne sont pas administrateurs et qui sont invités à un chatroom
-    @Query("select u from User u, UserChatroomRelation r where u.id = r.userId and r.chatroomId = ?1 and r.owned = false")
+    //@Query(value = "select u from users u, user_chatroom_relationship r where u.id = r.user_id and r.chatroom_id = ?1", nativeQuery = true)
+    @Query("SELECT u FROM User u JOIN u.joinedRooms c WHERE c.id = ?1 AND u.admin = false")
     Page<User> findUsersInvitedToChatroomByPage(long chatroomId, Pageable pageable);
 
     //Cette méthode permet de trouver tous les utilisateurs qui ne sont pas administrateurs et qui ne sont pas invités à un chatroom
-    @Query("select u from User u where u.admin <> true and u.id not in (select r.userId from UserChatroomRelation r where r.chatroomId = ?1)")
-    Page<User> findUsersNotInvitedToChatroomByPage(long chatroomId, Pageable pageable);
+    @Query("SELECT u FROM User u WHERE u.id <> ?2 AND u.admin = false AND u.id NOT IN (SELECT u.id FROM User u JOIN u.joinedRooms c WHERE c.id = ?1)")
+    Page<User> findUsersNotInvitedToChatroomByPage(long chatroomId, long creatorId, Pageable pageable);
 }

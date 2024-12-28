@@ -30,12 +30,12 @@ public class DTOMapper {
         return dto;
     }
     
-	public static ChatroomWithOwnerAndStatusDTO toChatroomWithOwnerAndStatusDTO(Chatroom chatroom, User owner, boolean status) {
+	public static ChatroomWithOwnerAndStatusDTO toChatroomWithOwnerAndStatusDTO(Chatroom chatroom, boolean status) {
 		ChatroomWithOwnerAndStatusDTO dto = new ChatroomWithOwnerAndStatusDTO();
 		dto.setId(chatroom.getId());
 		dto.setTitre(chatroom.getTitre());
 		dto.setDescription(chatroom.getDescription());
-		dto.setOwner(DTOMapper.toUserDTO(owner));
+		dto.setOwner(DTOMapper.toUserDTO(chatroom.getCreator()));
 		dto.setIsActif(status);
 		return dto;
 	}

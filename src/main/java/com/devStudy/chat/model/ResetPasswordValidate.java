@@ -10,7 +10,6 @@ import static com.devStudy.chat.service.utils.ConstantValues.MINUTES_EXPIRATION_
 @Table(name = "reset_password_validate")
 public class ResetPasswordValidate {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -18,7 +17,7 @@ public class ResetPasswordValidate {
     @Column(name = "token")
     private UUID token;
 
-    @ManyToOne/*(targetEntity = User.class, fetch = FetchType.EAGER)*/(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, name = "user_id")
     private User user;
 

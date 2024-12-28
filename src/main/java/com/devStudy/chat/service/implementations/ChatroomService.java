@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.devStudy.chat.dao.ChatroomRepository;
-import com.devStudy.chat.dao.UserChatroomRelationRepository;
 import com.devStudy.chat.dao.UserRepository;
 import com.devStudy.chat.dto.ChatroomDTO;
 import com.devStudy.chat.dto.ChatroomRequestDTO;
@@ -23,7 +22,6 @@ import com.devStudy.chat.dto.ModifyChatroomRequestDTO;
 import com.devStudy.chat.dto.UserDTO;
 import com.devStudy.chat.model.Chatroom;
 import com.devStudy.chat.model.User;
-import com.devStudy.chat.model.UserChatroomRelation;
 import com.devStudy.chat.service.interfaces.ChatroomServiceInt;
 import com.devStudy.chat.service.utils.Events.ChangeChatroomMemberEvent;
 import com.devStudy.chat.service.utils.Events.RemoveChatroomEvent;
@@ -40,15 +38,10 @@ public class ChatroomService implements ChatroomServiceInt {
 
     private final Logger logger = LoggerFactory.getLogger(ChatroomService.class);
 
-    @Resource
-    private UserChatroomRelationService userChatroomRelationService;
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private ChatroomRepository chatRoomRepository;
-
-    @Autowired
-    private UserChatroomRelationRepository userChatroomRelationRepository;
+    private ChatroomRepository chatroomRepository;
     
     @Autowired
     private ApplicationEventPublisher publisher;
@@ -58,7 +51,7 @@ public class ChatroomService implements ChatroomServiceInt {
      */
     @Override
     public Optional<ModifyChatroomDTO> findChatroom(long chatroomId) {
-    	Optional<ModifyChatroomDTO> chatroom = chatRoomRepository.findById(chatroomId).map(DTOMapper::toModifyChatroomDTO);
+    	Optional<ModifyChatroomDTO> chatroom = chatroomRepository.findById(chatroomId).map(DTOMapper::toModifyChatroomDTO);
         return chatroom;
     }
 
@@ -82,23 +75,27 @@ public class ChatroomService implements ChatroomServiceInt {
             chatroom.setHoraireCommence(dateStart);
             chatroom.setHoraireTermine(dateEnd);
 
-            List<Chatroom> allChatrooms = chatRoomRepository.findAll();
+            List<Chatroom> allChatrooms = chatroomRepository.findAll();
             for (Chatroom c : allChatrooms) {
                 if (c.equals(chatroom)) {
                     return false;
                 }
             }
-            chatRoomRepository.save(chatroom);
-            Chatroom chatroomAdded = chatRoomRepository.findByTitreAndDescriptionAndHoraireCommenceAndHoraireTermine(
-                    chatroomRequestDTO.getTitre(),
-                    chatroomRequestDTO.getDescription(),
-                    dateStart,
-                    dateEnd
-            ).get();
-            userChatroomRelationService.addRelation(userId, chatroomAdded.getId(), true);
-            for (UserDTO user : chatroomRequestDTO.getUsersInvited()) {
-                userChatroomRelationService.addRelation(user.getId(), chatroomAdded.getId(), false);
+            
+            User creator = userRepository.findById(userId).get();
+            
+            // etape 1 : ajouter le créateur du chatroom
+            chatroom.setCreator(creator);
+            creator.getCreatedRooms().add(chatroom);
+            
+            // etape 2 : ajouter les utilisateurs invités
+            List<Long> invitedUserIds = chatroomRequestDTO.getUsersInvited().stream().map(UserDTO::getId).toList();
+            for(var userInvited: userRepository.findAllById(invitedUserIds)) {
+            	chatroom.getMembers().add(userInvited);
+            	userInvited.getJoinedRooms().add(chatroom);
             }
+            
+            chatroomRepository.save(chatroom);
             return true;
         } catch (Exception e) {
             logger.error("Error while creating chatroom : " + e.getMessage());
@@ -112,7 +109,8 @@ public class ChatroomService implements ChatroomServiceInt {
     @Transactional(readOnly = true)
     private Page<Chatroom> getChatroomsOwnedOrJoinedOfUserByPage(long userId, boolean isOwner, int page) {
         Pageable pageable = PageRequest.of(page, DefaultPageSize_Chatrooms, Sort.sort(Chatroom.class).by(Chatroom::getTitre).ascending());
-        return chatRoomRepository.findChatroomsOwnedOrJoinedOfUserByPage(userId,isOwner,pageable);
+        return isOwner? chatroomRepository.findChatroomsCreatedByUserByPage(userId, pageable) :
+        				chatroomRepository.findChatroomsJoinedOfUserByPage(userId,pageable);
     }
     
     @Override
@@ -123,17 +121,12 @@ public class ChatroomService implements ChatroomServiceInt {
 		});
 	}
     
-    @Transactional(readOnly = true)
     @Override
 	public Page<ChatroomWithOwnerAndStatusDTO> getChatroomsJoinedOfUserByPage(long userId, boolean isOwner, int page) {
     	Page<Chatroom> chatrooms = getChatroomsOwnedOrJoinedOfUserByPage(userId, isOwner, page);
     	return chatrooms.map(chatroom -> {
-    		User owner = userRepository.findById(
-    				userChatroomRelationService.findOwnerOfChatroom(chatroom.getId()).get().getUserId()
-    		).get();
-    		// etape 2 : recuperer le status du chatroom
     		boolean isActive = chatroom.isActive() && !chatroom.hasNotStarted();
-    		return DTOMapper.toChatroomWithOwnerAndStatusDTO(chatroom, owner, isActive);
+    		return DTOMapper.toChatroomWithOwnerAndStatusDTO(chatroom, isActive);
     	});
     }
 
@@ -144,9 +137,12 @@ public class ChatroomService implements ChatroomServiceInt {
     @Override
     public List<UserDTO> getAllUsersInChatroom(long chatroomId){
         List<User> allUsersInChatroom = new ArrayList<>();
-        for(UserChatroomRelation user : userChatroomRelationRepository.findByChatroomId(chatroomId)){
-            userRepository.findById(user.getUserId()).ifPresent(allUsersInChatroom::add);
-        }
+        chatroomRepository.findById(chatroomId).ifPresent(
+        	chatroom -> {
+        		allUsersInChatroom.addAll(chatroom.getMembers());
+        		allUsersInChatroom.add(chatroom.getCreator());
+        	}
+        );
         return allUsersInChatroom.stream().map(DTOMapper::toUserDTO).toList();
     }
 
@@ -157,8 +153,20 @@ public class ChatroomService implements ChatroomServiceInt {
     @Override
     public boolean deleteChatRoom(long chatroomId) {
         try{
-            userChatroomRelationRepository.deleteAll(userChatroomRelationRepository.findByChatroomId(chatroomId));
-            chatRoomRepository.deleteById(chatroomId);
+        	chatroomRepository.findById(chatroomId).ifPresent(
+        		chatroom -> {
+        			// supprimer les users invités
+        			chatroom.getMembers().forEach(
+	        			user -> {
+	        				chatroom.getMembers().remove(user);
+	        				user.getJoinedRooms().remove(chatroom);
+	        			}
+        			);
+        			// pour le créateur, on supprime le chatroom depuis sa liste de chatrooms créés
+        			chatroom.getCreator().getCreatedRooms().remove(chatroom);
+        			chatroomRepository.delete(chatroom);
+        		}
+        	);
             publisher.publishEvent(new RemoveChatroomEvent(chatroomId));
             return true;
         }catch (Exception e){
@@ -173,7 +181,7 @@ public class ChatroomService implements ChatroomServiceInt {
     @Transactional
     @Override
     public void setStatusOfChatroom(long chatroomId, boolean status) {
-        chatRoomRepository.findById(chatroomId).ifPresent(chatroom -> chatRoomRepository.updateActive(chatroom.getId(), status));
+        chatroomRepository.findById(chatroomId).ifPresent(chatroom -> chatroomRepository.updateActive(chatroom.getId(), status));
     }
 
     /**
@@ -183,10 +191,20 @@ public class ChatroomService implements ChatroomServiceInt {
     @Override
     public boolean deleteUserInvited(long chatroomId, long userId){
         try{
-            userChatroomRelationRepository.delete(
-                userChatroomRelationRepository.findByChatroomIdAndUserId(chatroomId, userId).get()
-            );
-            UserDTO user = userRepository.findById(userId).map(DTOMapper::toUserDTO).get();
+        	UserDTO user = new UserDTO();
+        	Optional<Chatroom> chatroom = chatroomRepository.findById(chatroomId);
+        	if(chatroom.isPresent()) {
+        		for(var member: chatroom.get().getMembers()) {
+    				if (member.getId() == userId) {
+    					chatroom.get().getMembers().remove(member);
+    					member.getJoinedRooms().remove(chatroom.get());
+    					user = DTOMapper.toUserDTO(member);
+    					break;
+    				}
+    			}
+        	}else {
+        		return false;
+        	}
             publisher.publishEvent(new ChangeChatroomMemberEvent(chatroomId, List.of(), List.of(user)));
             return true;
         }catch (Exception e){
@@ -202,7 +220,7 @@ public class ChatroomService implements ChatroomServiceInt {
     @Override
     public boolean updateChatroom(ModifyChatroomRequestDTO chatroomRequestDTO, long chatroomId) {
         try{
-            Chatroom chatroom = chatRoomRepository.findById(chatroomId).get();
+            Chatroom chatroom = chatroomRepository.findById(chatroomId).get();
             boolean isChanged = false;
             if(!chatroom.getTitre().equals(chatroomRequestDTO.getTitre())){
                 chatroom.setTitre(chatroomRequestDTO.getTitre());
@@ -227,27 +245,35 @@ public class ChatroomService implements ChatroomServiceInt {
             }
             // ajouter les utilisateurs invités
 			for (UserDTO user : chatroomRequestDTO.getListAddedUsers()) {
-				if (userChatroomRelationRepository.findByChatroomIdAndUserId(chatroomId, user.getId()).isEmpty()) {
-					userChatroomRelationService.addRelation(user.getId(), chatroomId, false);
+				User userInvited = userRepository.findById(user.getId()).get();
+				if(!chatroom.getMembers().contains(userInvited)) {
+					chatroom.getMembers().add(userInvited);
+					userInvited.getJoinedRooms().add(chatroom);
 					isChanged = true;
 				}
 			}
+            
 			// supprimer les utilisateurs invités
 			for (UserDTO user : chatroomRequestDTO.getListRemovedUsers()) {
-				Optional<UserChatroomRelation> relation = userChatroomRelationRepository.findByChatroomIdAndUserId(chatroomId, user.getId());
-				if (relation.isPresent() && !relation.get().isOwned()) {
-					userChatroomRelationRepository.delete(relation.get());
+				User userRemoved = userRepository.findById(user.getId()).get();
+				if (chatroom.getMembers().contains(userRemoved) && !chatroom.getCreator().equals(userRemoved)) {
+					chatroom.getMembers().remove(userRemoved);
+					userRemoved.getJoinedRooms().remove(chatroom);
 					isChanged = true;
 				}
 			}
+			
             if(isChanged){
-                chatRoomRepository.save(chatroom);
+                chatroomRepository.save(chatroom);
             }
+            
             publisher.publishEvent(
-            		new ChangeChatroomMemberEvent(chatroomId,
-												  chatroomRequestDTO.getListAddedUsers(),
-												  chatroomRequestDTO.getListRemovedUsers()
-		    ));
+            	new ChangeChatroomMemberEvent(
+            	  chatroomId,
+				  chatroomRequestDTO.getListAddedUsers(),
+				  chatroomRequestDTO.getListRemovedUsers()
+		        )
+            );
             return true;
         }catch (RuntimeException e){
             logger.error("Error while updating chatroom with id " + chatroomId + " : " + e.getMessage());
@@ -261,7 +287,7 @@ public class ChatroomService implements ChatroomServiceInt {
     @Override
     public boolean checkUserIsOwnerOfChatroom(long userId, long chatroomId) {
         try {
-            return userChatroomRelationRepository.findByUserIdAndChatroomIdAndOwned(userId, chatroomId, true).isPresent();
+            return chatroomRepository.findByIdAndCreatorId(chatroomId, userId).isPresent();
         } catch (RuntimeException e) {
             logger.error("Error while checking if user with id " + userId + " is owner of chatroom with id " + chatroomId + " : " + e.getMessage());
             return false;

@@ -64,7 +64,7 @@ public class ResetPasswordService implements ResetPasswordServiceInt {
     @Transactional
     public void deleteValidate(ResetPasswordValidate resetPasswordValidate) {
     	resetPasswordValidate.getUser().getResetPasswordValidates().remove(resetPasswordValidate);
-    	resetPasswordValidate.setUser(null);
+    	//resetPasswordValidate.setUser(null);
     	
         resetPasswordValidateRespository.delete(resetPasswordValidate);
     }

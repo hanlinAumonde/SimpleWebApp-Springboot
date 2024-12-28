@@ -22,7 +22,7 @@ public interface UserServiceInt {
 
     Page<UserDTO> findUsersInvitedToChatroomByPage(long chatroomId, int page);
 
-    Page<UserDTO> findUsersNotInvitedToChatroomByPage(long chatroomId, int page);
+    Page<UserDTO> findUsersNotInvitedToChatroomByPage(long chatroomId, long userId, int page);
 
     void deleteUserById(Long id);
 
