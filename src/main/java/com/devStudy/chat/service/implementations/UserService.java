@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +11,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +39,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-public class UserService implements UserServiceInt {
+public class UserService implements UserServiceInt, UserDetailsService {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 	
@@ -45,7 +47,6 @@ public class UserService implements UserServiceInt {
 	private String FrontEndURL;
 
     @Autowired
-    @Lazy
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -166,8 +167,8 @@ public class UserService implements UserServiceInt {
      */
     @Transactional
     @Override
-    public void setStatusOfUser(long userId,boolean status) {
-        userRepository.updateActive(userId,status);
+    public void setStatusOfUser(String userEmail,boolean status) {
+        userRepository.updateActive(userEmail,status);
     }
 
     /**
@@ -175,8 +176,10 @@ public class UserService implements UserServiceInt {
      */
     @Transactional
     @Override
-    public void setFailedAttemptsOfUser(long userId, int failedAttempts) {
-        userRepository.updateFailedAttempts(userId,failedAttempts);
+    public int incrementFailedAttemptsOfUser(String userEmail) {
+    	int failedAttempts = findUserOrAdmin(userEmail, false).get().getFailedAttempts();
+        userRepository.updateFailedAttempts(userEmail,failedAttempts+1);
+        return failedAttempts+1;
     }
 
     /**
@@ -184,17 +187,9 @@ public class UserService implements UserServiceInt {
      */
     @Transactional
     @Override
-    public void lockUserAndResetFailedAttempts(long userId) {
-        userRepository.updateActive(userId,false);
-        userRepository.updateFailedAttempts(userId,0);
-    }
-
-    /**
-     * Cette méthode permet de trouver un utilisateur par son email
-     */
-    @Override
-    public Optional<User> findUserByEmail(String email) {
-        return userRepository.findByMail(email);
+    public void lockUserAndResetFailedAttempts(String userEmail) {
+        userRepository.updateActive(userEmail,false);
+        resetFailedAttemptsOfUser(userEmail);
     }
 
     /**
@@ -254,5 +249,26 @@ public class UserService implements UserServiceInt {
                 !(auth instanceof AnonymousAuthenticationToken)) &&
                 userRepository.findById(((User) auth.getPrincipal()).getId()).isPresent();
     }
+
+	@Override
+	public UserDetails loadUserByUsername(String userEmail) throws UsernameNotFoundException {
+		Optional<User> account = findUserOrAdmin(userEmail, false);
+		if (account.isEmpty()) {
+			LOGGER.info("Identifiants incorrects");
+			throw new UsernameNotFoundException("Identifiants incorrects");
+		}
+
+        if(!account.get().isActive()){
+            LOGGER.info("Compté bloqué");
+            throw new UsernameNotFoundException("Compté bloqué");
+        }
+        return account.get();
+	}
+
+	@Transactional
+	@Override
+	public void resetFailedAttemptsOfUser(String username) {
+        userRepository.updateFailedAttempts(username, 0);		
+	}
 
 }

@@ -22,13 +22,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     //Cette méthode permet de mise à jour le statut d'un utilisateur
     @Modifying
-    @Query("update User u set u.active = ?2 where u.id = ?1")
-    void updateActive(long userId, boolean status);
+    @Query("update User u set u.active = ?2 where u.mail = ?1")
+    void updateActive(String userEmail, boolean status);
 
     //Cette méthode permet de mise à jour le compteur d'essai de connexion d'un utilisateur
     @Modifying
-    @Query("update User u set u.failedAttempts = ?2 where u.id = ?1")
-    void updateFailedAttempts(long userId, int failedAttempts);
+    @Query("update User u set u.failedAttempts = ?2 where u.mail = ?1")
+    void updateFailedAttempts(String userEmail, int failedAttempts);
 
     //Cette méthode permet de mise à jour le mot de passe d'un utilisateur
     @Modifying

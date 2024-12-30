@@ -29,7 +29,7 @@ public class ResetPasswordService implements ResetPasswordServiceInt {
     
     @Override
 	public Map<String, String> sendResetPasswordEmail(String email, HttpServletRequest request) {
-    	Optional<User> userFound = userService.findUserByEmail(email);
+    	Optional<User> userFound = userService.findUserOrAdmin(email, false);
     	//ResponseDTO res = new ResponseDTO();
     	Map<String, String> res = new HashMap<>();
 		if (userFound.isPresent()) {

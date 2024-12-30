@@ -28,13 +28,11 @@ public interface UserServiceInt {
 
     Page<User> findAllInactiveUsersByPage(int page);
 
-    void setStatusOfUser(long userId,boolean status);
+    void setStatusOfUser(String userEmail,boolean status);
 
-    void setFailedAttemptsOfUser(long userId, int failedAttempts);
+    int incrementFailedAttemptsOfUser(String userEmail);
 
-    void lockUserAndResetFailedAttempts(long userId);
-
-    Optional<User> findUserByEmail(String email);
+    void lockUserAndResetFailedAttempts(String userEmail);
 
     Optional<User> findUserById(long userId);
 
@@ -45,4 +43,5 @@ public interface UserServiceInt {
     void resetPassword(User user, String password);
 
     boolean checkUserLoginStatus();
+	void resetFailedAttemptsOfUser(String username);
 }
