@@ -26,7 +26,7 @@ import com.devStudy.chat.dto.UserDTO;
 import com.devStudy.chat.model.User;
 import com.devStudy.chat.service.interfaces.UserServiceInt;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import static com.devStudy.chat.service.utils.ConstantValues.DefaultPageSize_Users;
 import static com.devStudy.chat.service.utils.ConstantValues.CreationSuccess;

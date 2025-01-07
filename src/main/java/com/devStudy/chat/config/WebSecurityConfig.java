@@ -1,5 +1,7 @@
 package com.devStudy.chat.config;
 
+import java.util.function.Supplier;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -10,6 +12,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
+import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
+import org.springframework.util.StringUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -20,29 +27,32 @@ import com.devStudy.chat.security.AccountAuthenticationSuccessHandler;
 import com.devStudy.chat.security.AccountLogoutSuccessHandler;
 import com.devStudy.chat.service.implementations.UserService;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig {
-	
-	/**
+
+    /**
      * C'est pour encoder le mot de passe
      * @return
      */
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-	
+
     /**
      * C'est pour instancier le AccountAuthenticationProvider avec les dépendances
      * @param passwordEncoder
      * @param userService
      * @return
      */
-	@Bean
-	public AccountAuthenticationProvider authProvider(
-			PasswordEncoder passwordEncoder,
-			UserService userService) {
+    @Bean
+    AccountAuthenticationProvider authProvider(
+            PasswordEncoder passwordEncoder,
+            UserService userService) {
 		return new AccountAuthenticationProvider(passwordEncoder, userService);
 	}
 
@@ -55,7 +65,7 @@ public class WebSecurityConfig {
      * @throws Exception
      */
     @Bean
-    public AuthenticationManager authManager(HttpSecurity http, AccountAuthenticationProvider authProvider) throws Exception{
+    AuthenticationManager authManager(HttpSecurity http, AccountAuthenticationProvider authProvider) throws Exception{
         AuthenticationManagerBuilder authenticationManagerBuilder =
                 http.getSharedObject(AuthenticationManagerBuilder.class);
         authenticationManagerBuilder.authenticationProvider(authProvider);
@@ -70,21 +80,23 @@ public class WebSecurityConfig {
      * @return
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http    
         		.cors(cors -> 
         			cors.configurationSource(corsConfigurationSource())
         		)
         		
                 .csrf(csrf -> 
-                	csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                	csrf
+                		.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                		.csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
                 )
                 
-                .authorizeRequests(auth -> 
+                .authorizeHttpRequests(auth -> 
                 	auth
-                		.antMatchers("/api/users/**","/api/chatrooms/**").hasRole("USER")
-                        .antMatchers("/api/login/**").permitAll()
-                        .antMatchers("ws://localhost:8080/**").hasRole("USER")
+                		.requestMatchers("/api/users/**","/api/chatrooms/**").hasRole("USER")
+                        .requestMatchers("/api/login/**").permitAll()
+                        .requestMatchers("ws://localhost:8080/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )
 
@@ -104,13 +116,49 @@ public class WebSecurityConfig {
                 );
         return http.build();
     }
+    
+    //Ref: https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html#csrf-integration-javascript
+    final class SpaCsrfTokenRequestHandler implements CsrfTokenRequestHandler {
+    	private final CsrfTokenRequestHandler plain = new CsrfTokenRequestAttributeHandler();
+    	private final CsrfTokenRequestHandler xor = new XorCsrfTokenRequestAttributeHandler();
+
+    	@Override
+    	public void handle(HttpServletRequest request, HttpServletResponse response, Supplier<CsrfToken> csrfToken) {
+    		/*
+    		 * Always use XorCsrfTokenRequestAttributeHandler to provide BREACH protection of
+    		 * the CsrfToken when it is rendered in the response body.
+    		 */
+    		this.xor.handle(request, response, csrfToken);
+    		/*
+    		 * Render the token value to a cookie by causing the deferred token to be loaded.
+    		 */
+    		csrfToken.get();
+    	}
+
+    	@Override
+    	public String resolveCsrfTokenValue(HttpServletRequest request, CsrfToken csrfToken) {
+    		String headerValue = request.getHeader(csrfToken.getHeaderName());
+    		/*
+    		 * If the request contains a request header, use CsrfTokenRequestAttributeHandler
+    		 * to resolve the CsrfToken. This applies when a single-page application includes
+    		 * the header value automatically, which was obtained via a cookie containing the
+    		 * raw CsrfToken.
+    		 *
+    		 * In all other cases (e.g. if the request contains a request parameter), use
+    		 * XorCsrfTokenRequestAttributeHandler to resolve the CsrfToken. This applies
+    		 * when a server-side rendered form includes the _csrf request parameter as a
+    		 * hidden input.
+    		 */
+    		return (StringUtils.hasText(headerValue) ? this.plain : this.xor).resolveCsrfTokenValue(request, csrfToken);
+    	}
+    }
 
     /**
      * C'est pour configurer le CORS
      * @return
      */
     @Bean
-	public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfigurationSource corsConfigurationSource() {
     	CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.addAllowedOriginPattern("*");
         corsConfiguration.addAllowedHeader("*");

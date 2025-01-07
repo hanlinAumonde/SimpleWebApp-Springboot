@@ -1,6 +1,6 @@
 package com.devStudy.chat.controller;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;

@@ -13,7 +13,7 @@ import com.devStudy.chat.service.implementations.ChatMessageService;
 import com.devStudy.chat.service.implementations.ChatroomService;
 import com.devStudy.chat.service.implementations.UserService;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
