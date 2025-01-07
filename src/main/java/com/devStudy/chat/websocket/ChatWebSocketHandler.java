@@ -19,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -33,9 +32,9 @@ import com.devStudy.chat.dto.UserDTO;
 import com.devStudy.chat.model.User;
 import com.devStudy.chat.service.implementations.ChatMessageService;
 import com.devStudy.chat.service.implementations.UserService;
-import com.devStudy.chat.service.utils.WebSocketException;
 import com.devStudy.chat.service.utils.Events.ChangeChatroomMemberEvent;
 import com.devStudy.chat.service.utils.Events.RemoveChatroomEvent;
+import com.devStudy.chat.service.utils.Exceptions.WebSocketException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -52,7 +51,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 	private UserService userService;
 	private ChatMessageService chatMessageService;
 	
-	@Autowired
 	public ChatWebSocketHandler(UserService userService, ChatMessageService chatMessageService) {
 		this.userService = userService;
 		this.chatMessageService = chatMessageService;

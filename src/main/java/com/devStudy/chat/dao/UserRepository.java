@@ -5,11 +5,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import com.devStudy.chat.model.User;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -32,8 +30,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     //Cette méthode permet de mise à jour le mot de passe d'un utilisateur
     @Modifying
-    @Query("update User u set u.pwd = ?2 where u.id = ?1")
-    void updatePwd(long userId, String pwd);
+    @Query("update User u set u.pwd = ?2 where u.mail = ?1")
+    void updatePwd(String userEmail, String pwd);
 
     Optional<User> findByMail(String email);
 

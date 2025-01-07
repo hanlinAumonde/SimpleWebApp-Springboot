@@ -18,9 +18,6 @@ public final class ConstantValues {
 	
     // Date format for chatroom start date
 	public static final DateTimeFormatter ISO_LOCAL_DATETIME_MINUTES = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
-	
-	// Max expired time for reset password token
-    public static final int MINUTES_EXPIRATION_TOKEN = 60;
 
 	// Max failed attempts for login
     public static final int MAX_FAILED_ATTEMPTS = 5;

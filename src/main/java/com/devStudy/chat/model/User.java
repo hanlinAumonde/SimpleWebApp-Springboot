@@ -26,7 +26,9 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "users")
 public class User implements UserDetails {
-    @Id
+    private static final long serialVersionUID = 1L;
+
+	@Id
     @GeneratedValue(strategy=GenerationType.IDENTITY) // strategy=GenerationType.IDENTITY => obligatoire pour auto increment mysql
     private long id;
 
@@ -49,11 +51,7 @@ public class User implements UserDetails {
     private boolean active = true;
 
     @Column(name = "failed_attempts")
-    private int failedAttempts = 0;
-    
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private Set<ResetPasswordValidate> resetPasswordValidates;
-    
+    private int failedAttempts = 0;    
 	
 	@OneToMany(mappedBy="creator", cascade = CascadeType.ALL, fetch = FetchType.LAZY ,orphanRemoval = true) 
 	private Set<Chatroom> createdRooms = new HashSet<>();
@@ -66,15 +64,6 @@ public class User implements UserDetails {
 	 
     
     public User(){}
-
-//    public User(long id, String lastName, String firstName, String mail, String password, boolean admin) {
-//        this.id = id;
-//        this.lastName = lastName;
-//        this.firstName = firstName;
-//        this.mail = mail;
-//        this.pwd = password;
-//        this.admin = admin;
-//    }
 
     public long getId() {
         return this.id;
@@ -134,10 +123,6 @@ public class User implements UserDetails {
 
     public void setFailedAttempts(int failedAttempts) {
         this.failedAttempts = failedAttempts;
-    }
-    
-    public Set<ResetPasswordValidate> getResetPasswordValidates(){
-    	return this.resetPasswordValidates;
     }
 	
 	public Set<Chatroom> getCreatedRooms() {

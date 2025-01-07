@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.devStudy.chat.dto.CreateCompteDTO;
 import com.devStudy.chat.dto.UserDTO;
-import com.devStudy.chat.service.implementations.ResetPasswordService;
+import com.devStudy.chat.service.implementations.JwtTokenService;
 import com.devStudy.chat.service.implementations.UserService;
 
 import java.util.Map;
@@ -33,7 +33,7 @@ public class LoginManageController {
 	private UserService userService;
 
 	@Resource
-	private ResetPasswordService resetPasswordService;
+	private JwtTokenService jwtTokenService;
 	
 	/**
      * Cette méthode permet d'obtenir le les informations de l'utilisateur connecté
@@ -62,9 +62,8 @@ public class LoginManageController {
 	 * de passe à l'adresse mail saisie si l'adresse mail est valide
 	 */
 	@PostMapping(value = "/forget-password")
-	public ResponseEntity<Map<String, String>> postForgetPasswordPage(@RequestParam(value = "email") String email,
-			HttpServletRequest request) {
-		return ResponseEntity.ok(resetPasswordService.sendResetPasswordEmail(email, request));
+	public ResponseEntity<Map<String, String>> postForgetPasswordPage(@RequestParam(value = "email") String email) {
+		return ResponseEntity.ok(userService.sendResetPasswordEmail(email));
 	}
 
 	/*
@@ -72,7 +71,7 @@ public class LoginManageController {
 	 */
 	@GetMapping(value = "/validate-token")
 	public ResponseEntity<Boolean> validateToken(@RequestParam(value = "token") String token) {
-	    return ResponseEntity.ok(resetPasswordService.validateToken(token));
+	    return ResponseEntity.ok(jwtTokenService.validateToken(token));
 	}
 	
 	/**
@@ -81,7 +80,7 @@ public class LoginManageController {
 	@PutMapping(value = "/reset-password")
 	public ResponseEntity<Boolean> resetPassword(@RequestParam(value = "token") String token,
             @RequestParam(value = "password") String password) {
-        return ResponseEntity.ok(resetPasswordService.resetPassword(token, password));		
+        return ResponseEntity.ok(userService.resetPassword(token, password));		
 	}
 	
 	@PostMapping(value = "/compte/create")

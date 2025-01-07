@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.mail.MailException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,32 +19,30 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.devStudy.chat.dao.ResetPasswordValidateRespository;
 import com.devStudy.chat.dao.UserRepository;
 import com.devStudy.chat.dto.CreateCompteDTO;
 import com.devStudy.chat.dto.DTOMapper;
 import com.devStudy.chat.dto.UserDTO;
-import com.devStudy.chat.model.ResetPasswordValidate;
 import com.devStudy.chat.model.User;
 import com.devStudy.chat.service.interfaces.UserServiceInt;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 
 import static com.devStudy.chat.service.utils.ConstantValues.DefaultPageSize_Users;
 import static com.devStudy.chat.service.utils.ConstantValues.CreationSuccess;
 import static com.devStudy.chat.service.utils.ConstantValues.CompteExist;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class UserService implements UserServiceInt, UserDetailsService {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 	
-	@Value("${FrontEndURL}")
+	@Value("${chatroomApp.FrontEndURL}")
 	private String FrontEndURL;
 
     @Autowired
@@ -54,9 +53,10 @@ public class UserService implements UserServiceInt, UserDetailsService {
 
     @Resource
     private EmailService emailService;
+    
+    @Resource
+    private JwtTokenService tokenService;
 
-    @Autowired
-    private ResetPasswordValidateRespository resetPasswordValidateRespository;
     
     private Pageable getPageableSetting(int page) {
     	var sortConds = Sort.sort(User.class).by(User::getFirstName).ascending()
@@ -212,21 +212,35 @@ public class UserService implements UserServiceInt, UserDetailsService {
      * Cette méthode permet de construire un email de réinitialisation de mot de passe et de l'envoyer à l'utilisateur
      */
     @Override
-    public void sendResetPasswordEmail(User user, HttpServletRequest request) {
-        UUID token = UUID.randomUUID();
-        ResetPasswordValidate resetPasswordValidate = new ResetPasswordValidate(token, user);
-        resetPasswordValidateRespository.save(resetPasswordValidate);
-        String ResetPasswordLink = FrontEndURL
-                + "/reset-password?token=" + token.toString();
-        LOGGER.info("Reset Password Link : " + ResetPasswordLink);
-        String subject = "Reset Password";
-        String content = "Bonjour " + user.getFirstName() + ",\n\n"
-                + "Cliquer sur le lien ci-dessous pour réinitialiser votre mot de passe :\n"
-                + ResetPasswordLink + "\n\n"
-                + "Attention : ce lien n'est valide que pendant 1 heure\n\n"
-                + "Bien cordialement,\n"
-                + "Chat Team";
-        emailService.sendSimpleMessage(user.getMail(), subject, content);
+    public Map<String, String> sendResetPasswordEmail(String email) {
+    	Map<String, String> response = new HashMap<>();
+    	try {
+	    	if(findUserOrAdmin(email, false).isPresent()) {
+	    		String jwtToken = tokenService.generateJwtToken(email);
+	    		String ResetPasswordLink = String.format("%s/reset-password?token=%s", FrontEndURL, jwtToken);
+	            LOGGER.info("Reset Password Link : " + ResetPasswordLink);
+	            String subject = "Reset Password";
+	            String content = String.format(
+	            		"Bonjour,\n\n"
+	            		+ "Cliquer sur le lien ci-dessous pour réinitialiser votre mot de passe :\n"
+	            		+ "%s\n\n"
+	                    + "Attention : ce lien n'est valide que pendant une demi-heure\n\n"
+	                    + "Bien cordialement,\n"
+	                    + "Chat Team"
+	            		, ResetPasswordLink);
+	            emailService.sendSimpleMessage(email, subject, content);
+	            response.put("status", "success");
+	            response.put("msg",  "un mail de réinitialisation de mot de passe a été envoyé à l'adresse " + email
+						+ ", veuillez cliquer sur le lien contenu dans le mail pour réinitialiser votre mot de passe");
+	    	}else {
+	    		response.put("status", "error");
+	    		response.put("msg", "Utilisateur non trouvé");
+	    	}
+		}catch (MailException mailException) {
+			response.put("status", "error");
+			response.put("msg", "Erreur lors de l'envoi du mail de réinitialisation de mot de passe");
+		}
+        return response;
     }
 
     /**
@@ -234,8 +248,13 @@ public class UserService implements UserServiceInt, UserDetailsService {
      */
     @Transactional
     @Override
-    public void resetPassword(User user, String password) {
-        userRepository.updatePwd(user.getId(), passwordEncoder.encode(password));
+    public boolean resetPassword(String jwtToken, String password) {
+		String email = tokenService.validateTokenAndGetEmail(jwtToken);
+		if (!email.isEmpty()) {
+			userRepository.updatePwd(email, passwordEncoder.encode(password));
+			return true;
+		}
+		return false;
     }
 
     /**

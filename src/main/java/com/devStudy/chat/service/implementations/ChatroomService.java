@@ -26,12 +26,13 @@ import com.devStudy.chat.service.interfaces.ChatroomServiceInt;
 import com.devStudy.chat.service.utils.Events.ChangeChatroomMemberEvent;
 import com.devStudy.chat.service.utils.Events.RemoveChatroomEvent;
 
-import javax.annotation.Resource;
-
 import static com.devStudy.chat.service.utils.ConstantValues.DefaultPageSize_Chatrooms;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class ChatroomService implements ChatroomServiceInt {

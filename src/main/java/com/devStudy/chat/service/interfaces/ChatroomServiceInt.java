@@ -8,8 +8,6 @@ import com.devStudy.chat.dto.ChatroomWithOwnerAndStatusDTO;
 import com.devStudy.chat.dto.ModifyChatroomDTO;
 import com.devStudy.chat.dto.ModifyChatroomRequestDTO;
 import com.devStudy.chat.dto.UserDTO;
-import com.devStudy.chat.model.Chatroom;
-import com.devStudy.chat.model.User;
 
 import java.util.List;
 import java.util.Optional;

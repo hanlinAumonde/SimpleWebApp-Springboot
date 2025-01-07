@@ -6,7 +6,7 @@ import com.devStudy.chat.dto.CreateCompteDTO;
 import com.devStudy.chat.dto.UserDTO;
 import com.devStudy.chat.model.User;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 import java.util.Optional;
 
 public interface UserServiceInt {
@@ -38,9 +38,9 @@ public interface UserServiceInt {
 
     Optional<User> findUserOrAdmin(String email, boolean isAdmin);
 
-    void sendResetPasswordEmail(User user, HttpServletRequest request);
+    Map<String, String> sendResetPasswordEmail(String email);
 
-    void resetPassword(User user, String password);
+    boolean resetPassword(String jwtToken, String password);
 
     boolean checkUserLoginStatus();
 	void resetFailedAttemptsOfUser(String username);

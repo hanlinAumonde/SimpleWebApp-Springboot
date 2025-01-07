@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -26,20 +27,15 @@ public class EmailService implements EmailServiceInt {
     private String from;
 
     @Override
-    public void sendSimpleMessage(String to, String subject, String text) {
+    public void sendSimpleMessage(String to, String subject, String text) throws MailException {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from);
         message.setTo(to);
         //message.setCc(cc);
         message.setSubject(subject);
         message.setText(text);
-        try {
-            emailSender.send(message);
-            logger.info("Email envoyé à " + to + " avec succès.");
-        }
-        catch (Exception exception) {
-            logger.error("Erreur lors de l'envoi de l'email à " + to + " : " + exception.getMessage());
-        }
+        emailSender.send(message);
+        logger.info("Email envoyé à " + to + " avec succès.");
     }
 
     @Override

@@ -1,7 +1,5 @@
 package com.devStudy.chat.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,8 +21,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/chatrooms")
 public class ChatroomManageController {
-
-	private final Logger logger = LoggerFactory.getLogger(ChatroomManageController.class);
 
 	@Resource
 	private UserService userService;

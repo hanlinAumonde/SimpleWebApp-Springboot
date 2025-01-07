@@ -1,7 +1,5 @@
 package com.devStudy.chat.dto;
 
-import java.util.List;
-
 /**
  * Cette classe permet de représenter une chatroom avec moins d'informations que la classe Chatroom
  */
