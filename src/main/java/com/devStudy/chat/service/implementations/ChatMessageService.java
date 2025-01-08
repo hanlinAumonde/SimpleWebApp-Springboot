@@ -29,14 +29,8 @@ import com.devStudy.chat.service.interfaces.ChatMessageServiceInt;
 @Component
 public class ChatMessageService implements ChatMessageServiceInt {
 	
-	/*
-	 * @Autowired private MongoClient mongoClient;
-	 */
-	
 	@Autowired
 	private ChatMessageRepository chatMessageRepository;
-	
-	
 	
 	private Pageable getPageableSetting(int page, int size) {
 		return PageRequest.of(page,size, Sort.by(Sort.Direction.DESC, "timestamp"));

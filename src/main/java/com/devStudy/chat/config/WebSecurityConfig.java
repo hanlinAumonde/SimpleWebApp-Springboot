@@ -2,6 +2,9 @@ package com.devStudy.chat.config;
 
 import java.util.function.Supplier;
 
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,6 +14,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
@@ -33,6 +38,12 @@ import jakarta.servlet.http.HttpServletResponse;
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig {
+	
+	@Value("${chatroomApp.rememberMe.key}")
+	private String rememberMeKey;
+	
+	@Value("${chatroomApp.rememberMe.expirationTime}")
+	private int rememberMeExpirationTime;
 
     /**
      * C'est pour encoder le mot de passe
@@ -71,17 +82,26 @@ public class WebSecurityConfig {
         authenticationManagerBuilder.authenticationProvider(authProvider);
         return authenticationManagerBuilder.build();
     }
+    
+    @Bean
+    PersistentTokenRepository persistentTokenRepository(DataSource dataSource) {
+        JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
+        tokenRepository.setDataSource(dataSource);
+        return tokenRepository;
+	}
 
     /**
      * C'est le filtre de sécurité qui va être appliqué à toutes les requêtes
      * Il replace "configure(HttpSecurity http)" dans la classe "WebSecurityConfigurerAdapter"
      * qui a le meme fonctionnement
      * @param http
+     * @param persistentTokenRepository
+     * @param rememberMeServices
      * @return
      */
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http    
+    SecurityFilterChain filterChain(HttpSecurity http, PersistentTokenRepository persistentTokenRepository, UserService userDetailService) throws Exception {
+        return http    
         		.cors(cors -> 
         			cors.configurationSource(corsConfigurationSource())
         		)
@@ -90,6 +110,15 @@ public class WebSecurityConfig {
                 	csrf
                 		.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 		.csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
+                )
+                
+                .rememberMe(rememberMeConfig -> 
+                	rememberMeConfig
+	                	.tokenRepository(persistentTokenRepository)
+	                    .key(rememberMeKey) 
+	                    .tokenValiditySeconds(rememberMeExpirationTime)
+	                    .userDetailsService(userDetailService)  
+	                    .authenticationSuccessHandler(new AccountAuthenticationSuccessHandler())
                 )
                 
                 .authorizeHttpRequests(auth -> 
@@ -113,8 +142,8 @@ public class WebSecurityConfig {
 	                    .invalidateHttpSession(true)
 	                    .clearAuthentication(true)
 	                    .logoutSuccessHandler(new AccountLogoutSuccessHandler())
-                );
-        return http.build();
+                )
+                .build();
     }
     
     //Ref: https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html#csrf-integration-javascript
@@ -124,31 +153,13 @@ public class WebSecurityConfig {
 
     	@Override
     	public void handle(HttpServletRequest request, HttpServletResponse response, Supplier<CsrfToken> csrfToken) {
-    		/*
-    		 * Always use XorCsrfTokenRequestAttributeHandler to provide BREACH protection of
-    		 * the CsrfToken when it is rendered in the response body.
-    		 */
     		this.xor.handle(request, response, csrfToken);
-    		/*
-    		 * Render the token value to a cookie by causing the deferred token to be loaded.
-    		 */
     		csrfToken.get();
     	}
 
     	@Override
     	public String resolveCsrfTokenValue(HttpServletRequest request, CsrfToken csrfToken) {
     		String headerValue = request.getHeader(csrfToken.getHeaderName());
-    		/*
-    		 * If the request contains a request header, use CsrfTokenRequestAttributeHandler
-    		 * to resolve the CsrfToken. This applies when a single-page application includes
-    		 * the header value automatically, which was obtained via a cookie containing the
-    		 * raw CsrfToken.
-    		 *
-    		 * In all other cases (e.g. if the request contains a request parameter), use
-    		 * XorCsrfTokenRequestAttributeHandler to resolve the CsrfToken. This applies
-    		 * when a server-side rendered form includes the _csrf request parameter as a
-    		 * hidden input.
-    		 */
     		return (StringUtils.hasText(headerValue) ? this.plain : this.xor).resolveCsrfTokenValue(request, csrfToken);
     	}
     }

@@ -1,0 +1,48 @@
+spring:
+  # PostgreSQL 数据源配置
+  datasource:
+    url: jdbc:postgresql://localhost:5432/chatAppDB
+    username: postgres
+    password: 721215
+    driver-class-name: org.postgresql.Driver
+  
+  # JPA 配置
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  
+  # MongoDB 配置
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: ChatApp
+      auto-index-creation: true
+  
+  # MVC 配置
+  mvc:
+    hiddenmethod:
+      filter:
+        enabled: true
+  
+  # 邮件配置
+  mail:
+    host: smtp.sina.cn
+    port: 587
+    username: 18669815282m@sina.cn
+    password: af69a33fb41618bd
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# 应用自定义配置
+chatroomApp:
+  FrontEndURL: http://localhost:4200
+  jwt:
+    secret: dGhpcyBpcyBhIHRlc3Qgc2VjcmV0IGtleSBmb3IgZ2VuZXJhdGUgand0IHRva2Vucw==
+    expirationTime: 30
+  rememberMe:
+    key: remerber-me
+    expirationTime: 604800
