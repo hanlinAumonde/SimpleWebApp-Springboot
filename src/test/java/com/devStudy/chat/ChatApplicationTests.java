@@ -1,4 +1,4 @@
-package fr.utc.sr03.chat;
+package com.devStudy.chat;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
