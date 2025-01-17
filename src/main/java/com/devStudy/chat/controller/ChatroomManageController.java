@@ -38,16 +38,10 @@ public class ChatroomManageController {
 	 */
 	@PostMapping("/create")
 	public ResponseEntity<Boolean> createChatroom(@RequestBody ChatroomRequestDTO chatroomRequestDTO) {
-		if (userService.checkUserLoginStatus()) {
-			UserDTO user = userService.getLoggedUser();
-			boolean result = chatroomService.createChatroom(chatroomRequestDTO, user.getId());
-			if (result) {
-				return ResponseEntity.ok(true);
-			} else {
-				return ResponseEntity.status(409).body(false);
-			}
+		if (chatroomService.createChatroom(chatroomRequestDTO, userService.getLoggedUser().getId())) {
+			return ResponseEntity.ok(true);
 		}
-		return ResponseEntity.status(401).body(false);
+		return ResponseEntity.status(409).body(false);
 	}
 
 	/**
@@ -56,20 +50,13 @@ public class ChatroomManageController {
 	 */
 	@DeleteMapping("/{chatroomId}")
 	public ResponseEntity<Boolean> deleteChatroom(@PathVariable long chatroomId) {
-		if (userService.checkUserLoginStatus()) {
-			boolean checkOwner = chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),
-					chatroomId);
-			if (checkOwner) {
-				if (chatroomService.deleteChatRoom(chatroomId)) {
-					return ResponseEntity.ok(true);
-				} else {
-					return ResponseEntity.status(409).body(false);
-				}
-			} else {
-				return ResponseEntity.status(403).body(false);
+		if (chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),chatroomId)) {
+			if (chatroomService.deleteChatRoom(chatroomId)) {
+				return ResponseEntity.ok(true);
 			}
+			return ResponseEntity.status(409).body(false);
 		}
-		return ResponseEntity.status(401).body(false);
+		return ResponseEntity.status(403).body(false);
 	}
 
 	/**
@@ -78,16 +65,11 @@ public class ChatroomManageController {
 	 */
 	@GetMapping("/{chatroomId}")
 	public ResponseEntity<ModifyChatroomDTO> getChatroomForModify(@PathVariable long chatroomId) {
-		if (userService.checkUserLoginStatus()) {
-			Optional<ModifyChatroomDTO> chatroom = chatroomService.findChatroom(chatroomId);
-			boolean checkOwner = chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),
-					chatroomId);
-			return checkOwner
-					? chatroom.map(value -> ResponseEntity.ok(value))
-							.orElseGet(() -> ResponseEntity.status(404).body(new ModifyChatroomDTO()))
-					: ResponseEntity.status(403).body(new ModifyChatroomDTO());
-		}
-		return ResponseEntity.status(401).body(new ModifyChatroomDTO());
+		Optional<ModifyChatroomDTO> chatroom = chatroomService.findChatroom(chatroomId);
+		return chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),chatroomId)?
+				  chatroom.map(value -> ResponseEntity.ok(value))
+						.orElseGet(() -> ResponseEntity.status(404).body(new ModifyChatroomDTO()))
+				: ResponseEntity.status(403).body(new ModifyChatroomDTO());
 	}
 
 	/**
@@ -99,15 +81,10 @@ public class ChatroomManageController {
 	@GetMapping("/{chatroomId}/users/invited")
 	public ResponseEntity<Page<UserDTO>> getUsersInvitedInChatroom(@PathVariable long chatroomId,
 			@RequestParam(defaultValue = "0") int page) {
-		boolean checkOwner = chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),
-				chatroomId);
-		if (userService.checkUserLoginStatus() && checkOwner) {
-			Page<UserDTO> users = userService.findUsersInvitedToChatroomByPage(chatroomId, page);
-			return ResponseEntity.ok(users);
-		} else if (!checkOwner) {
-			return ResponseEntity.status(403).body(Page.empty());
+		if (chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),chatroomId)) {
+			return ResponseEntity.ok(userService.findUsersInvitedToChatroomByPage(chatroomId, page));
 		}
-		return ResponseEntity.status(401).body(Page.empty());
+		return ResponseEntity.status(403).body(Page.empty());
 	}
 
 	/**
@@ -120,32 +97,22 @@ public class ChatroomManageController {
 	public ResponseEntity<Page<UserDTO>> getUsersNotInvitedInChatroom(@PathVariable long chatroomId,
 			@RequestParam(defaultValue = "0") int page) {
 		long userId = userService.getLoggedUser().getId();
-		boolean checkOwner = chatroomService.checkUserIsOwnerOfChatroom(userId,chatroomId);
-		if (userService.checkUserLoginStatus() && checkOwner) {
-			Page<UserDTO> users = userService.findUsersNotInvitedToChatroomByPage(chatroomId, userId, page);
-			return ResponseEntity.ok(users);
-		} else if (!checkOwner) {
-			return ResponseEntity.status(403).body(Page.empty());
+		if (chatroomService.checkUserIsOwnerOfChatroom(userId,chatroomId)) {
+			return ResponseEntity.ok(userService.findUsersNotInvitedToChatroomByPage(chatroomId, userId, page));
 		}
-		return ResponseEntity.status(401).body(Page.empty());
+		return ResponseEntity.status(403).body(Page.empty());
 	}
 
 	@PutMapping("/{chatroomId}")
 	public ResponseEntity<Boolean> updateChatroomDetails(@PathVariable long chatroomId,
 			@RequestBody ModifyChatroomRequestDTO chatroomRequest) {
-		boolean checkOwner = chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),
-				chatroomId);
-		if (userService.checkUserLoginStatus() && checkOwner) {
-			boolean res = chatroomService.updateChatroom(chatroomRequest, chatroomId);
-			if (res) {
+		if (chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),chatroomId)) {
+			if (chatroomService.updateChatroom(chatroomRequest, chatroomId)) {
 				return ResponseEntity.ok(true);
-			} else {
-				return ResponseEntity.status(409).body(false);
 			}
-		} else if (!checkOwner) {
-			return ResponseEntity.status(403).body(false);
+			return ResponseEntity.status(409).body(false);
 		}
-		return ResponseEntity.status(401).body(false);
+		return ResponseEntity.status(403).body(false);
 	}
 
 	/*
@@ -153,15 +120,14 @@ public class ChatroomManageController {
 	 */
 	@DeleteMapping("/{chatroomId}/users/invited/{userId}")
 	public ResponseEntity<Boolean> leaveChatroom(@PathVariable long chatroomId, @PathVariable long userId) {
-		if (userService.checkUserLoginStatus()) {
-			boolean res = chatroomService.deleteUserInvited(chatroomId, userId);
-			if (res) {
+		if(userId == userService.getLoggedUser().getId()) {
+			if (chatroomService.deleteUserInvited(chatroomId, userId)) {
 				return ResponseEntity.ok(true);
 			} else {
 				return ResponseEntity.status(500).body(false);
 			}
 		}
-		return ResponseEntity.status(401).body(false);
+		return ResponseEntity.status(403).body(false);		
 	}
 
 	/**
@@ -171,15 +137,11 @@ public class ChatroomManageController {
 	 */
 	@GetMapping("/{chatroomId}/members")
 	public ResponseEntity<List<UserDTO>> getAllMembersInChatroom(@PathVariable long chatroomId) {
-		if (userService.checkUserLoginStatus()) {
-			List<UserDTO> users = chatroomService.getAllUsersInChatroom(chatroomId);
-			if (users.size() > 0) {
-				return ResponseEntity.ok(users);
-			} else {
-				return ResponseEntity.status(500).body(new ArrayList<>());
-			}
+		List<UserDTO> users = chatroomService.getAllUsersInChatroom(chatroomId);
+		if (users.size() > 0) {
+			return ResponseEntity.ok(users);
 		}
-		return ResponseEntity.status(401).body(new ArrayList<>());
+		return ResponseEntity.status(500).body(new ArrayList<>());
 	}
 
 	/*
@@ -189,9 +151,6 @@ public class ChatroomManageController {
 	@GetMapping("/{chatroomId}/history")
 	public ResponseEntity<List<ChatMsgDTO>> getHistoryMsgByChatroomIdAndPage(@PathVariable long chatroomId,
 			@RequestParam(defaultValue = "0") int page) {
-		if (userService.checkUserLoginStatus()) {
-			return ResponseEntity.ok(chatMessageService.getChatMessagesByChatroomIdByPage(chatroomId, page));
-		}
-		return ResponseEntity.status(401).body(new ArrayList<>());
+		return ResponseEntity.ok(chatMessageService.getChatMessagesByChatroomIdByPage(chatroomId, page));
 	}
 }

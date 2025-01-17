@@ -32,11 +32,7 @@ public class UserManageController {
      */
     @GetMapping("/others")
     public ResponseEntity<Page<UserDTO>> getOtherUsers(@RequestParam(defaultValue ="0")int page){
-        if(userService.checkUserLoginStatus()){
-            Page<UserDTO> users = userService.findAllOtherUsersNotAdminByPage(page, userService.getLoggedUser().getId());
-            return ResponseEntity.ok(users);
-        }
-        return ResponseEntity.status(401).body(Page.empty());
+        return ResponseEntity.ok(userService.findAllOtherUsersNotAdminByPage(page, userService.getLoggedUser().getId()));
     }
     
     /**
@@ -44,11 +40,10 @@ public class UserManageController {
      */
     @GetMapping("/{userId}/chatrooms/owned")
     public ResponseEntity<Page<ChatroomDTO>> getChatroomsOwnedByUser(@PathVariable long userId, @RequestParam(defaultValue = "0")int page){
-        if(userService.checkUserLoginStatus() && userId == userService.getLoggedUser().getId()){
-            Page<ChatroomDTO> chatrooms = chatroomService.getChatroomsOwnedOfUserByPage(userId,page);
-        	return ResponseEntity.ok(chatrooms);
+        if(userId == userService.getLoggedUser().getId()){
+        	return ResponseEntity.ok(chatroomService.getChatroomsOwnedOfUserByPage(userId,page));
         }
-        return ResponseEntity.status(401).body(Page.empty());
+        return ResponseEntity.status(403).body(Page.empty());
     }
     
     /**
@@ -56,10 +51,10 @@ public class UserManageController {
      */
     @GetMapping("/{userId}/chatrooms/joined")
     public ResponseEntity<Page<ChatroomWithOwnerAndStatusDTO>> getChatroomsJoinedByUser(@PathVariable long userId, @RequestParam(defaultValue = "0")int page){
-    	if(userService.checkUserLoginStatus() && userId == userService.getLoggedUser().getId()){
+    	if(userId == userService.getLoggedUser().getId()){
     		return ResponseEntity.ok(chatroomService.getChatroomsJoinedOfUserByPage(userId, false, page));
     	}
-    	return ResponseEntity.status(401).body(Page.empty());
+    	return ResponseEntity.status(403).body(Page.empty());
     }
 	
 }
