@@ -164,21 +164,4 @@ public class WebSecurityConfig {
     		return (StringUtils.hasText(headerValue) ? this.plain : this.xor).resolveCsrfTokenValue(request, csrfToken);
     	}
     }
-
-//    /**
-//     * C'est pour configurer le CORS
-//     * @return
-//     */
-//    @Bean
-//    CorsConfigurationSource corsConfigurationSource() {
-//    	CorsConfiguration corsConfiguration = new CorsConfiguration();
-//        corsConfiguration.addAllowedOriginPattern("*");
-//        corsConfiguration.addAllowedHeader("*");
-//        corsConfiguration.addAllowedMethod("*");
-//        corsConfiguration.setAllowCredentials(true);
-//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", corsConfiguration);
-//        return source;
-//	}
-
 }
