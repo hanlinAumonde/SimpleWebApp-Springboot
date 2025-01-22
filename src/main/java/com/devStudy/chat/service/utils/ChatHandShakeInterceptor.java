@@ -8,7 +8,7 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 import org.springframework.web.util.UriTemplate;
 
-import static com.devStudy.chat.service.utils.ConstantValues.CHAT_URI_PATTERN;
+import static com.devStudy.chat.service.utils.ConstantValues.CHAT_ENDPOINT;
 
 public class ChatHandShakeInterceptor implements HandshakeInterceptor {
 
@@ -18,7 +18,7 @@ public class ChatHandShakeInterceptor implements HandshakeInterceptor {
 								   WebSocketHandler wsHandler,
 								   Map<String, Object> attributes) throws Exception {
 		// Get URI template variables
-		UriTemplate uriTemplate = new UriTemplate(CHAT_URI_PATTERN);
+		UriTemplate uriTemplate = new UriTemplate(CHAT_ENDPOINT);
 		Map<String, String> uriTemplateVars = uriTemplate.match(request.getURI().toString());
 		if(uriTemplateVars != null) {
 			String chatroomId = uriTemplateVars.get("chatroomId");

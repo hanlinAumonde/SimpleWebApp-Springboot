@@ -102,9 +102,9 @@ public class WebSecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http, PersistentTokenRepository persistentTokenRepository, UserService userDetailService) throws Exception {
         return http    
-        		.cors(cors -> 
-        			cors.configurationSource(corsConfigurationSource())
-        		)
+//        		.cors(cors -> 
+//        			cors.configurationSource(corsConfigurationSource())
+//        		)
         		
                 .csrf(csrf -> 
                 	csrf
@@ -125,7 +125,8 @@ public class WebSecurityConfig {
                 	auth
                 		.requestMatchers("/api/users/**","/api/chatrooms/**").hasRole("USER")
                         .requestMatchers("/api/login/**").permitAll()
-                        .requestMatchers("ws://localhost:8080/**").hasRole("USER")
+                        //.requestMatchers("ws://localhost:8080/**").hasRole("USER")
+                        .requestMatchers("ws://").hasRole("USER")
                         .anyRequest().authenticated()
                 )
 
@@ -164,20 +165,20 @@ public class WebSecurityConfig {
     	}
     }
 
-    /**
-     * C'est pour configurer le CORS
-     * @return
-     */
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-    	CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.addAllowedOriginPattern("*");
-        corsConfiguration.addAllowedHeader("*");
-        corsConfiguration.addAllowedMethod("*");
-        corsConfiguration.setAllowCredentials(true);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfiguration);
-        return source;
-	}
+//    /**
+//     * C'est pour configurer le CORS
+//     * @return
+//     */
+//    @Bean
+//    CorsConfigurationSource corsConfigurationSource() {
+//    	CorsConfiguration corsConfiguration = new CorsConfiguration();
+//        corsConfiguration.addAllowedOriginPattern("*");
+//        corsConfiguration.addAllowedHeader("*");
+//        corsConfiguration.addAllowedMethod("*");
+//        corsConfiguration.setAllowCredentials(true);
+//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//        source.registerCorsConfiguration("/**", corsConfiguration);
+//        return source;
+//	}
 
 }
