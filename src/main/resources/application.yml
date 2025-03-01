@@ -9,6 +9,8 @@ spring:
   # JPA 配置
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
   
   # MongoDB 配置
   data:
