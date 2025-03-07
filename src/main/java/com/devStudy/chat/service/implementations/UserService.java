@@ -26,16 +26,11 @@ import com.devStudy.chat.dto.UserDTO;
 import com.devStudy.chat.model.User;
 import com.devStudy.chat.service.interfaces.UserServiceInt;
 
-import jakarta.annotation.Resource;
-
 import static com.devStudy.chat.service.utils.ConstantValues.DefaultPageSize_Users;
 import static com.devStudy.chat.service.utils.ConstantValues.CreationSuccess;
 import static com.devStudy.chat.service.utils.ConstantValues.CompteExist;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserService implements UserServiceInt, UserDetailsService {
@@ -45,18 +40,18 @@ public class UserService implements UserServiceInt, UserDetailsService {
 	@Value("${chatroomApp.FrontEndURL}")
 	private String FrontEndURL;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final EmailService emailService;
+    private final JwtTokenService tokenService;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Resource
-    private EmailService emailService;
-    
-    @Resource
-    private JwtTokenService tokenService;
-
+    public UserService(PasswordEncoder passwordEncoder, UserRepository userRepository, EmailService emailService, JwtTokenService tokenService) {
+        this.passwordEncoder = passwordEncoder;
+        this.userRepository = userRepository;
+        this.emailService = emailService;
+        this.tokenService = tokenService;
+    }
     
     private Pageable getPageableSetting(int page) {
     	var sortConds = Sort.sort(User.class).by(User::getFirstName).ascending()
@@ -91,7 +86,7 @@ public class UserService implements UserServiceInt, UserDetailsService {
     public CreateCompteDTO addUser(CreateCompteDTO user) {
         List<User> users = userRepository.findAll();
         for(User u : users){
-            if(u.getMail() == user.getMail()){
+            if(Objects.equals(u.getMail(), user.getMail())){
                 user.setCreateMsg(CompteExist);
                 return user;
             }
@@ -145,39 +140,12 @@ public class UserService implements UserServiceInt, UserDetailsService {
     }
 
     /**
-     * Cette méthode permet de supprimer un utilisateur
-     */
-    @Transactional
-    @Override
-    public void deleteUserById(Long id) {
-        User user = userRepository.findById(id).get();
-        userRepository.delete(user);
-    }
-
-    /**
-     * Cette méthode permet de trouver tous les utilisateurs désactivés
-     */
-    @Override
-    public Page<User> findAllInactiveUsersByPage(int page) {
-        return userRepository.findByActive(false,this.getPageableSetting(page));
-    }
-
-    /**
-     * Cette méthode permet de mise à jour le statut d'un utilisateur
-     */
-    @Transactional
-    @Override
-    public void setStatusOfUser(String userEmail,boolean status) {
-        userRepository.updateActive(userEmail,status);
-    }
-
-    /**
      * Cette méthode permet de mise à jour le nombre d'essais de connexion d'un utilisateur
      */
     @Transactional
     @Override
-    public int incrementFailedAttemptsOfUser(String userEmail) {
-    	int failedAttempts = findUserOrAdmin(userEmail, false).get().getFailedAttempts();
+    public int incrementFailedAttemptsOfUser(String userEmail) throws NoSuchElementException {
+    	int failedAttempts = findUserOrAdmin(userEmail, false).orElseThrow().getFailedAttempts();
         userRepository.updateFailedAttempts(userEmail,failedAttempts+1);
         return failedAttempts+1;
     }
@@ -218,15 +186,19 @@ public class UserService implements UserServiceInt, UserDetailsService {
 	    	if(findUserOrAdmin(email, false).isPresent()) {
 	    		String jwtToken = tokenService.generateJwtToken(email);
 	    		String ResetPasswordLink = String.format("%s/reset-password?token=%s", FrontEndURL, jwtToken);
-	            LOGGER.info("Reset Password Link : " + ResetPasswordLink);
+                LOGGER.info("Reset Password Link : {}", ResetPasswordLink);
 	            String subject = "Reset Password";
 	            String content = String.format(
-	            		"Bonjour,\n\n"
-	            		+ "Cliquer sur le lien ci-dessous pour réinitialiser votre mot de passe :\n"
-	            		+ "%s\n\n"
-	                    + "Attention : ce lien n'est valide que pendant une demi-heure\n\n"
-	                    + "Bien cordialement,\n"
-	                    + "Chat Team"
+                        """
+                                Bonjour,
+                                
+                                Cliquer sur le lien ci-dessous pour réinitialiser votre mot de passe :
+                                %s
+                                
+                                Attention : ce lien n'est valide que pendant une demi-heure
+                                
+                                Bien cordialement,
+                                Chat Team"""
 	            		, ResetPasswordLink);
 	            emailService.sendSimpleMessage(email, subject, content);
 	            response.put("status", "success");

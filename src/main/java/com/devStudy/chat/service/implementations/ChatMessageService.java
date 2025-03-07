@@ -28,12 +28,16 @@ import com.devStudy.chat.service.interfaces.ChatMessageServiceInt;
 
 @Component
 public class ChatMessageService implements ChatMessageServiceInt {
-	
+
+	private final ChatMessageRepository chatMessageRepository;
+
 	@Autowired
-	private ChatMessageRepository chatMessageRepository;
+	public ChatMessageService(ChatMessageRepository chatMessageRepository) {
+		this.chatMessageRepository = chatMessageRepository;
+	}
 	
-	private Pageable getPageableSetting(int page, int size) {
-		return PageRequest.of(page,size, Sort.by(Sort.Direction.DESC, "timestamp"));
+	private Pageable getPageableSetting(int page) {
+		return PageRequest.of(page, DefaultPageSize_Messages, Sort.by(Sort.Direction.DESC, "timestamp"));
 	}
 
 	@Override
@@ -55,7 +59,7 @@ public class ChatMessageService implements ChatMessageServiceInt {
 	@Override
 	public List<ChatMsgDTO> getChatMessagesByChatroomIdByPage(long chatroomId, int page){
 		List<ChatMessage> initialRes = chatMessageRepository.findByChatroomId(chatroomId, 
-				getPageableSetting(page, DefaultPageSize_Messages)).getContent();
+				getPageableSetting(page)).getContent();
 		return setResMsgList(initialRes);
 	}
 	

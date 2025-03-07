@@ -16,7 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Page<User> findByAdmin(boolean isAdmin, Pageable pageable);
 
-    Page<User> findByActive(boolean isActive, Pageable pageable);
+    //Page<User> findByActive(boolean isActive, Pageable pageable);
 
     //Cette méthode permet de mise à jour le statut d'un utilisateur
     @Modifying
@@ -33,7 +33,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("update User u set u.pwd = ?2 where u.mail = ?1")
     void updatePwd(String userEmail, String pwd);
 
-    Optional<User> findByMail(String email);
+    //Optional<User> findByMail(String email);
 
     //Cette méthode permet de trouver tous les utilisateurs qui ne sont pas administrateurs
     @Query("select u from User u where u.id <> ?1 and u.admin = false")

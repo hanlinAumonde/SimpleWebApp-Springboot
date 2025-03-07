@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -48,9 +49,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 	
 	private static final ObjectMapper MAPPER =  new ObjectMapper();
 	
-	private UserService userService;
-	private ChatMessageService chatMessageService;
-	
+	private final UserService userService;
+	private final ChatMessageService chatMessageService;
+
+	@Autowired
 	public ChatWebSocketHandler(UserService userService, ChatMessageService chatMessageService) {
 		this.userService = userService;
 		this.chatMessageService = chatMessageService;
@@ -248,9 +250,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     		TO_ALL_IN_CHATROOM,
     		null
     	);
-    	if(CHATROOMS_MAP.containsKey(chatroomId)) {
-    		CHATROOMS_MAP.remove(chatroomId);
-    	}
+        CHATROOMS_MAP.remove(chatroomId);
     }
 	
 	/*

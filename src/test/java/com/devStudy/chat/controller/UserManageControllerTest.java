@@ -7,7 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.Arrays;
+import java.util.List;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -83,7 +83,7 @@ public class UserManageControllerTest {
 	@Test
 	void testGetChatroomsOwnedByUser() throws Exception {
 		when(chatroomService.getChatroomsOwnedOfUserByPage(1L, 0)).thenReturn(
-				new PageImpl<>(Arrays.asList(new ChatroomDTO()))
+				new PageImpl<>(List.of(new ChatroomDTO()))
 		);
 		
 		// Test with the valid user id
@@ -108,7 +108,7 @@ public class UserManageControllerTest {
 	@Test
 	void testGetChatroomsJoinedByUser() throws Exception {
 		when(chatroomService.getChatroomsJoinedOfUserByPage(1L, false, 0))
-				.thenReturn(new PageImpl<>(Arrays.asList(new ChatroomWithOwnerAndStatusDTO())));
+				.thenReturn(new PageImpl<>(List.of(new ChatroomWithOwnerAndStatusDTO())));
 
 		// Test with the valid user id
 		mockMvc.perform(get("/api/users/1/chatrooms/joined")

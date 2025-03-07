@@ -26,7 +26,7 @@ public class AccountAuthenticationSuccessHandler implements AuthenticationSucces
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         //response.sendRedirect("/accueil");
     	logger.info("login du user");
-        logger.info("user's authorities : " + ((User)authentication.getPrincipal()).getAuthorities());
+        logger.info("user's authorities : {}", ((User) authentication.getPrincipal()).getAuthorities());
     	
 		response.setContentType("application/json;charset=UTF-8");
 		response.setStatus(HttpServletResponse.SC_OK);

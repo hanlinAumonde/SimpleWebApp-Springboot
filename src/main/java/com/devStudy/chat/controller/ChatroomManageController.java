@@ -67,7 +67,7 @@ public class ChatroomManageController {
 	public ResponseEntity<ModifyChatroomDTO> getChatroomForModify(@PathVariable long chatroomId) {
 		Optional<ModifyChatroomDTO> chatroom = chatroomService.findChatroom(chatroomId);
 		return chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),chatroomId)?
-				  chatroom.map(value -> ResponseEntity.ok(value))
+				  chatroom.map(ResponseEntity::ok)
 						.orElseGet(() -> ResponseEntity.status(404).body(new ModifyChatroomDTO()))
 				: ResponseEntity.status(403).body(new ModifyChatroomDTO());
 	}
@@ -138,7 +138,7 @@ public class ChatroomManageController {
 	@GetMapping("/{chatroomId}/members")
 	public ResponseEntity<List<UserDTO>> getAllMembersInChatroom(@PathVariable long chatroomId) {
 		List<UserDTO> users = chatroomService.getAllUsersInChatroom(chatroomId);
-		if (users.size() > 0) {
+		if (!users.isEmpty()) {
 			return ResponseEntity.ok(users);
 		}
 		return ResponseEntity.status(500).body(new ArrayList<>());

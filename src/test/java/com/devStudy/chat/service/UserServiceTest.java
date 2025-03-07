@@ -15,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertAll;
 import static com.devStudy.chat.service.utils.ConstantValues.CreationSuccess;
 import static com.devStudy.chat.service.utils.ConstantValues.CompteExist;
 
@@ -189,13 +188,6 @@ public class UserServiceTest {
 		CreateCompteDTO resultFailed = userService.addUser(testCreateCompteDTO);
 		assertEquals(CompteExist, resultFailed.getCreateMsg());
 		verify(userRepository, never()).save(any(User.class));
-    }
-    
-    @Test
-    void testDeleteUserById() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        userService.deleteUserById(1L);
-        verify(userRepository).delete(testUser);
     }
     
     //---------------------------------------------用户认证相关测试-----------------------------------------

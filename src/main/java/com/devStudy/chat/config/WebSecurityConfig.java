@@ -47,7 +47,7 @@ public class WebSecurityConfig {
 
     /**
      * C'est pour encoder le mot de passe
-     * @return
+     * @return PasswordEncoder
      */
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -58,7 +58,7 @@ public class WebSecurityConfig {
      * C'est pour instancier le AccountAuthenticationProvider avec les dépendances
      * @param passwordEncoder
      * @param userService
-     * @return
+     * @return AccountAuthenticationProvider
      */
     @Bean
     AccountAuthenticationProvider authProvider(
@@ -72,7 +72,7 @@ public class WebSecurityConfig {
      * dans l'environment global de l'application
      * @param http
      * @param authProvider
-     * @return
+     * @return AuthenticationManager
      * @throws Exception
      */
     @Bean
@@ -82,7 +82,13 @@ public class WebSecurityConfig {
         authenticationManagerBuilder.authenticationProvider(authProvider);
         return authenticationManagerBuilder.build();
     }
-    
+
+    /**
+     * C'est pour instancier le PersistentTokenRepository,
+     * stocker les tokens liés aux remember-me dans la base de données
+     * @param dataSource
+     * @return PersistentTokenRepository
+     */
     @Bean
     PersistentTokenRepository persistentTokenRepository(DataSource dataSource) {
         JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
@@ -96,8 +102,8 @@ public class WebSecurityConfig {
      * qui a le meme fonctionnement
      * @param http
      * @param persistentTokenRepository
-     * @param rememberMeServices
-     * @return
+     * @param userDetailService
+     * @return SecurityFilterChain
      */
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http, PersistentTokenRepository persistentTokenRepository, UserService userDetailService) throws Exception {
@@ -144,12 +150,12 @@ public class WebSecurityConfig {
 	                    .logoutSuccessHandler(new AccountLogoutSuccessHandler())
                 )
                 .exceptionHandling(exception -> 
-                exception.authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.setContentType("application/json;charset=UTF-8");
-                    response.getWriter().write("{\"message\":\"未登录\"}");
-                })
-            )
+                    exception.authenticationEntryPoint((request, response, authException) -> {
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write("{\"message\":\"未登录\"}");
+                    })
+                )
                 .build();
     }
     

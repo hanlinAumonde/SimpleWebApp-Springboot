@@ -20,11 +20,6 @@ public class AccountAuthenticationFailureHandler implements AuthenticationFailur
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
-        /*
-    	String error = exception.getMessage();
-        request.getSession().setAttribute("error", error);
-        response.sendRedirect("/login");
-        */
     	response.setContentType("application/json;charset=UTF-8");
     	response.setStatus(HttpServletResponse.SC_OK);
     	

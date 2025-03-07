@@ -24,12 +24,6 @@ public interface UserServiceInt {
 
     Page<UserDTO> findUsersNotInvitedToChatroomByPage(long chatroomId, long userId, int page);
 
-    void deleteUserById(Long id);
-
-    Page<User> findAllInactiveUsersByPage(int page);
-
-    void setStatusOfUser(String userEmail,boolean status);
-
     int incrementFailedAttemptsOfUser(String userEmail);
 
     void lockUserAndResetFailedAttempts(String userEmail);
