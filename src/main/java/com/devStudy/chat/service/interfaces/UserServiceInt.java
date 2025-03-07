@@ -32,10 +32,12 @@ public interface UserServiceInt {
 
     Optional<User> findUserOrAdmin(String email, boolean isAdmin);
 
-    Map<String, String> sendResetPasswordEmail(String email);
+    Map<String, String> sendResetPwdEmailRequestToMQ(String email);
+    //Map<String, String> sendResetPasswordEmail(String email);
 
     boolean resetPassword(String jwtToken, String password);
 
     boolean checkUserLoginStatus();
-	void resetFailedAttemptsOfUser(String username);
+
+    void resetFailedAttemptsOfUser(String username);
 }

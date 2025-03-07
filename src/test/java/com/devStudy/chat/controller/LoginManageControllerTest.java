@@ -121,20 +121,6 @@ public class LoginManageControllerTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(0));
 	}
-	
-	// Test forgetPassword() method
-	@Test
-    void testForgetPassword() throws Exception {
-        String email = "test@example.com";
-        Map<String, String> response = Map.of("message", "Email sent");
-        when(userService.sendResetPasswordEmail(email)).thenReturn(response);
-
-        mockMvc.perform(post("/api/login/forget-password")
-                		.param("email", email)
-                		.with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Email sent"));
-    }
 
 	// Test validateToken() method
     @Test

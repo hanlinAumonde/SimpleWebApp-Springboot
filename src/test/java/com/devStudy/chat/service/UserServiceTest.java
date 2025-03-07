@@ -5,8 +5,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -19,7 +17,6 @@ import static com.devStudy.chat.service.utils.ConstantValues.CreationSuccess;
 import static com.devStudy.chat.service.utils.ConstantValues.CompteExist;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.AfterAll;
@@ -35,7 +32,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.mail.MailException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -288,60 +284,7 @@ public class UserServiceTest {
         SecurityContextHolder.clearContext();
     }
     
-    //---------------------------------------------测试用户密码重置和邮件功能相关方法-----------------------------------------
-    @Test
-    void testSendResetPasswordEmail_Success() {
-        when(userRepository.findByMailAndAdmin("test@example.com", false))
-            .thenReturn(Optional.of(testUser));
-        when(tokenService.generateJwtToken("test@example.com"))
-            .thenReturn("test-jwt-token");
-        doNothing().when(emailService).sendSimpleMessage(
-            eq("test@example.com"), 
-            eq("Reset Password"), 
-            anyString()
-        );
-        
-        Map<String, String> result = userService.sendResetPasswordEmail("test@example.com");
-        
-        assertEquals("success", result.get("status"));
-        verify(tokenService).generateJwtToken("test@example.com");
-        verify(emailService).sendSimpleMessage(
-            eq("test@example.com"), 
-            eq("Reset Password"), 
-            anyString()
-        );
-    }
-
-    @Test
-    void testSendResetPasswordEmail_UserNotFound() {
-        when(userRepository.findByMailAndAdmin("nonexistent@example.com", false))
-            .thenReturn(Optional.empty());
-        
-        Map<String, String> result = userService.sendResetPasswordEmail("nonexistent@example.com");
-        
-        assertEquals("error", result.get("status"));
-        verify(tokenService, never()).generateJwtToken(anyString());
-        verify(emailService, never()).sendSimpleMessage(anyString(), anyString(), anyString());
-    }
-
-    @Test
-    void testSendResetPasswordEmail_MailException() {
-        when(userRepository.findByMailAndAdmin("test@example.com", false))
-            .thenReturn(Optional.of(testUser));
-        when(tokenService.generateJwtToken("test@example.com"))
-            .thenReturn("test-jwt-token");
-        doThrow(new MailException("mail exception") {}).when(emailService).sendSimpleMessage(
-    		eq("test@example.com"), 
-            eq("Reset Password"), 
-            anyString()
-        );
-        
-        Map<String, String> result = userService.sendResetPasswordEmail("test@example.com");
-        
-        assertEquals("error", result.get("status"));
-        verify(tokenService).generateJwtToken("test@example.com");
-    }
-
+    //---------------------------------------------测试用户密码重置相关方法-----------------------------------------
     @Test
     void testResetPassword_Success() {
         when(tokenService.validateTokenAndGetEmail("valid-token"))

@@ -63,7 +63,8 @@ public class LoginManageController {
 	 */
 	@PostMapping(value = "/forget-password")
 	public ResponseEntity<Map<String, String>> postForgetPasswordPage(@RequestParam(value = "email") String email) {
-		return ResponseEntity.ok(userService.sendResetPasswordEmail(email));
+		//return ResponseEntity.ok(userService.sendResetPasswordEmail(email));
+		return ResponseEntity.ok(userService.sendResetPwdEmailRequestToMQ(email));
 	}
 
 	/*
