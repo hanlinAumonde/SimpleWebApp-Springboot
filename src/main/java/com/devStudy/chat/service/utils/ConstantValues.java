@@ -48,6 +48,10 @@ public final class ConstantValues {
     public static final int MESSAGE_ADD_CHATROOM_MEMBER = 4;
     public static final int MESSAGE_REMOVE_CHATROOM_MEMBER = 5;
 
+    // Jwt token flag
+    public static final String TOKEN_FLAG_RESET_PASSWORD = "resetPassword";
+    public static final String TOKEN_FLAG_LOGIN = "login";
+
     // RabbitMQ exchange name ,queue name and routing key
     public static final String RABBITMQ_EXCHANGE_NAME = "topics-exchange";
     public static final String RABBITMQ_QUEUE_Q1 = "sendMail-queue-q1";

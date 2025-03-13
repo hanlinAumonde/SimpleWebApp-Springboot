@@ -51,7 +51,10 @@ chatroomApp:
   FrontEndURL: http://localhost:4200
   jwt:
     secret: dGhpcyBpcyBhIHRlc3Qgc2VjcmV0IGtleSBmb3IgZ2VuZXJhdGUgand0IHRva2Vucw==
-    expirationTime: 30
+    resetPwdTokenExpirationTime: 30
+    loginTokenExpirationTime: 120
   rememberMe:
     key: remerber-me
     expirationTime: 604800
+  blackListService:
+    clearExpiredTokensInterval: 900000
