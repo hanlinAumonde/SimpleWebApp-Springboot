@@ -1,5 +1,7 @@
 package com.devStudy.chat.controller;
 
+import com.devStudy.chat.model.User;
+import com.devStudy.chat.service.implementations.BlackListService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -34,25 +36,28 @@ public class LoginManageController {
 
 	@Resource
 	private JwtTokenService jwtTokenService;
+
+	@Resource
+	private BlackListService blackListService;
 	
 	/**
      * Cette méthode permet d'obtenir le les informations de l'utilisateur connecté
      */
     @GetMapping("/check-login")
     public ResponseEntity<UserDTO> getLoggedUser(HttpServletRequest request){
-        if (userService.checkUserLoginStatus()) {
-            UserDTO user = userService.getLoggedUser();
-            return ResponseEntity.ok(user);
-        }
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if(!(auth instanceof AnonymousAuthenticationToken)){
-            //si l'utilisateur est connecté mais a ete supprimé par l'admin, on doit mauellement supprimer le contexte de login
-            //delete login context
-            SecurityContextHolder.getContext().setAuthentication(null);
-            //invalidate http session
-            request.getSession().invalidate();
-            LOGGER.info("user {} a ete supprime par l'admin", auth.getName());
-        }
+		final String authHeader = request.getHeader("Authorization");
+		if(authHeader != null && authHeader.startsWith("Bearer ")) {
+			final String token = authHeader.substring(7);
+			final String email = jwtTokenService.validateTokenAndGetEmail(token);
+			if(email != null) {
+				UserDTO user = userService.getLoggedUser(email);
+				if(user.getId() == 0) {
+					LOGGER.error("User not found, but token is valid");
+					blackListService.addTokenToBlackList(token, jwtTokenService.getExpirationDate(token).getTime());
+				}
+				return ResponseEntity.ok(user);
+			}
+		}
 		return ResponseEntity.ok(new UserDTO());
     }
 
@@ -88,5 +93,21 @@ public class LoginManageController {
 	public ResponseEntity<CreateCompteDTO> createUserCompte(@RequestBody CreateCompteDTO createCompteDTO){
 		return ResponseEntity.ok(userService.addUser(createCompteDTO));
 	}
-	
+
+	@PostMapping(value = "/logout")
+	public ResponseEntity<?> logout(HttpServletRequest request){
+		final String authHeader = request.getHeader("Authorization");
+		String resultMsg;
+		if(authHeader != null && authHeader.startsWith("Bearer ")) {
+			final String jwtToken = authHeader.substring(7);
+			if(jwtTokenService.validateToken(jwtToken))
+				blackListService.addTokenToBlackList(jwtToken, jwtTokenService.getExpirationDate(jwtToken).getTime());
+			resultMsg = "Logout successful";
+		}else{
+			resultMsg = "Unnecessary logout, you are not logged in";
+		}
+		return ResponseEntity.ok(Map.ofEntries(
+				Map.entry("message", resultMsg)
+		));
+	}
 }
