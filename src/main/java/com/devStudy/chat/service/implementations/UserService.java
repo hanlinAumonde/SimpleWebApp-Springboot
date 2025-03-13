@@ -1,5 +1,6 @@
 package com.devStudy.chat.service.implementations;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
@@ -28,6 +29,7 @@ import com.devStudy.chat.dto.DTOMapper;
 import com.devStudy.chat.dto.UserDTO;
 import com.devStudy.chat.model.User;
 import com.devStudy.chat.service.interfaces.UserServiceInt;
+
 
 import java.util.*;
 
@@ -74,10 +76,15 @@ public class UserService implements UserServiceInt, UserDetailsService {
      * Cette méthode permet de récupérer un utilisateur connecté
      */
     @Override
-    public UserDTO getLoggedUser() {
+    public UserDTO getLoggedUser(String email) {
         return DTOMapper.toUserDTO(
-        	(User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()
+        	findUserOrAdmin(email,false).orElse(new User())
         );
+    }
+
+    @Override
+    public long getUserId(HttpServletRequest request){
+        return request.getAttribute("userId") == null? 0 : (long) request.getAttribute("userId");
     }
 
     /**
@@ -205,7 +212,7 @@ public class UserService implements UserServiceInt, UserDetailsService {
     public void sendResetPasswordEmail(String email) {
     	try {
 	    	if(findUserOrAdmin(email, false).isPresent()) {
-	    		String jwtToken = tokenService.generateJwtToken(email);
+	    		String jwtToken = tokenService.generateJwtToken(email, TOKEN_FLAG_RESET_PASSWORD);
 	    		String ResetPasswordLink = String.format("%s/reset-password?token=%s", FrontEndURL, jwtToken);
                 LOGGER.info("Reset Password Link : {}", ResetPasswordLink);
 	            String subject = "Reset Password";
@@ -240,18 +247,6 @@ public class UserService implements UserServiceInt, UserDetailsService {
 			return true;
 		}
 		return false;
-    }
-
-    /**
-     * Cette méthode permet de vérifier si un utilisateur est encore connecté
-     */
-    @Override
-    public boolean checkUserLoginStatus() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return (auth != null &&
-                auth.isAuthenticated() &&
-                !(auth instanceof AnonymousAuthenticationToken)) &&
-                userRepository.findById(((User) auth.getPrincipal()).getId()).isPresent();
     }
 
 	@Override

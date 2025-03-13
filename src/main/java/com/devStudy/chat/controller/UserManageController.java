@@ -2,6 +2,7 @@ package com.devStudy.chat.controller;
 
 import jakarta.annotation.Resource;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,16 +32,16 @@ public class UserManageController {
      * Elle va etre utilisée dans le processus du planificateur de chatroom (inviter des utilisateurs)
      */
     @GetMapping("/others")
-    public ResponseEntity<Page<UserDTO>> getOtherUsers(@RequestParam(defaultValue ="0")int page){
-        return ResponseEntity.ok(userService.findAllOtherUsersNotAdminByPage(page, userService.getLoggedUser().getId()));
+    public ResponseEntity<Page<UserDTO>> getOtherUsers(@RequestParam(defaultValue ="0")int page, HttpServletRequest request){
+        return ResponseEntity.ok(userService.findAllOtherUsersNotAdminByPage(page, userService.getUserId(request)));
     }
     
     /**
      * Cette méthode permet d'obtenir tous les chatrooms créés par l'utilisateur connecté
      */
     @GetMapping("/{userId}/chatrooms/owned")
-    public ResponseEntity<Page<ChatroomDTO>> getChatroomsOwnedByUser(@PathVariable long userId, @RequestParam(defaultValue = "0")int page){
-        if(userId == userService.getLoggedUser().getId()){
+    public ResponseEntity<Page<ChatroomDTO>> getChatroomsOwnedByUser(@PathVariable long userId, @RequestParam(defaultValue = "0")int page, HttpServletRequest request){
+        if(userId == userService.getUserId(request)){
         	return ResponseEntity.ok(chatroomService.getChatroomsOwnedOfUserByPage(userId,page));
         }
         return ResponseEntity.status(403).body(Page.empty());
@@ -50,11 +51,10 @@ public class UserManageController {
      * Cette méthode permet d'obtenir tous les chatrooms auxquels l'utilisateur connecté a participé
      */
     @GetMapping("/{userId}/chatrooms/joined")
-    public ResponseEntity<Page<ChatroomWithOwnerAndStatusDTO>> getChatroomsJoinedByUser(@PathVariable long userId, @RequestParam(defaultValue = "0")int page){
-    	if(userId == userService.getLoggedUser().getId()){
-    		return ResponseEntity.ok(chatroomService.getChatroomsJoinedOfUserByPage(userId, false, page));
-    	}
-    	return ResponseEntity.status(403).body(Page.empty());
+    public ResponseEntity<Page<ChatroomWithOwnerAndStatusDTO>> getChatroomsJoinedByUser(@PathVariable long userId, @RequestParam(defaultValue = "0")int page, HttpServletRequest request){
+        if(userId == userService.getUserId(request)){
+        	return ResponseEntity.ok(chatroomService.getChatroomsJoinedOfUserByPage(userId, false, page));
+        }
+        return ResponseEntity.status(403).body(Page.empty());
     }
-	
 }
