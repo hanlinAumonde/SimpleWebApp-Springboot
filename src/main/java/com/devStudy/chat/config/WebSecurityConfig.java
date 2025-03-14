@@ -104,10 +104,7 @@ public class WebSecurityConfig {
                                     JwtAuthenticationFilter jwtAuthenticationFilter,
                                     JwtTokenService jwtTokenService) throws Exception {
         return http    
-//        		.cors(cors ->
-//        			cors.configurationSource(corsConfigurationSource())
-//        		)
-        		
+          
                 .csrf(AbstractHttpConfigurer::disable)
 
                 .sessionManagement(session ->
@@ -126,7 +123,8 @@ public class WebSecurityConfig {
                 	auth
                 		.requestMatchers("/api/users/**","/api/chatrooms/**").hasRole("USER")
                         .requestMatchers("/api/login/**").permitAll()
-                        .requestMatchers("ws://localhost:8080/**").hasRole("USER")
+                        //.requestMatchers("ws://localhost:8080/**").hasRole("USER")
+                        .requestMatchers("ws://").hasRole("USER")
                         .anyRequest().authenticated()
                 )
 

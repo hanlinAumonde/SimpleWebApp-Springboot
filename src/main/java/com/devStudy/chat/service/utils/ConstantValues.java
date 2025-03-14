@@ -33,7 +33,7 @@ public final class ConstantValues {
     
     //Chat server
     public static final String CHAT_ENDPOINT = "/chatroom/{chatroomId}/user/{userId}";
-    public static final String CHAT_URI_PATTERN = "http://localhost:8080/chatroom/{chatroomId}/user/{userId}";
+    //public static final String CHAT_URI_PATTERN = "http://localhost:8080/chatroom/{chatroomId}/user/{userId}";
     
     // WebSocket broadcast types
     public static final String TO_ALL_IN_CHATROOM = "toAll";
