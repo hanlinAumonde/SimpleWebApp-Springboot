@@ -29,7 +29,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.devStudy.chat.dto.ChatroomDTO;
 import com.devStudy.chat.dto.ChatroomWithOwnerAndStatusDTO;
-import com.devStudy.chat.dto.UserDTO;
 import com.devStudy.chat.service.implementations.ChatroomService;
 import com.devStudy.chat.service.implementations.UserService;
 

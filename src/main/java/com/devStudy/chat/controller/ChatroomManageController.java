@@ -1,8 +1,6 @@
 package com.devStudy.chat.controller;
 
-import com.devStudy.chat.service.implementations.JwtTokenService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,8 +31,6 @@ public class ChatroomManageController {
 
 	@Resource
 	private ChatMessageService chatMessageService;
-    @Autowired
-    private JwtTokenService jwtTokenService;
 
 	/**
 	 * Cettet méthode permet créer une chatroom Si une chatroom existe déjà (ou il y

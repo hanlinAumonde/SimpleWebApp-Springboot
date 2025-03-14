@@ -41,8 +41,9 @@ public class JwtTokenService implements JwtTokenServiceInt {
 	@Override
 	public String generateJwtToken(String email, String tokenFlag) {
 		Instant now = Instant.now();
-		Instant expiration = now.plusMillis(Objects.equals(tokenFlag, TOKEN_FLAG_LOGIN) ? loginTokenExpirationTime : resetPwdTokenExpirationTime
-				* 60 * 1000);
+		Instant expiration = now.plusMillis(60 * 1000
+								* (Objects.equals(tokenFlag, TOKEN_FLAG_LOGIN) ? loginTokenExpirationTime : resetPwdTokenExpirationTime)
+							);
 
         return Jwts.builder()
                 .subject(email)
@@ -55,7 +56,7 @@ public class JwtTokenService implements JwtTokenServiceInt {
 	@Override
 	public boolean validateToken(String token) {
 		try {
-            return isExpired(token);
+            return isNotExpired(token);
         } catch (SignatureException e) {
             LOGGER.error("Invalid JWT signature: {}", e.getMessage());
         } catch (MalformedJwtException e) {
@@ -64,14 +65,18 @@ public class JwtTokenService implements JwtTokenServiceInt {
             LOGGER.error("JWT token is unsupported: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
             LOGGER.error("JWT claims string is empty: {}", e.getMessage());
-        }
+        } catch(ExpiredJwtException e) {
+			LOGGER.error("JWT token has expired: {}", e.getMessage());
+		} catch (JwtException e) {
+			LOGGER.error("JWT token is invalid: {}", e.getMessage());
+		}
         return false;
 	}
 	
 	@Override
 	public String validateTokenAndGetEmail(String token) {
 		try {
-			return isExpired(token) ? getSubject(token) : null;
+			return isNotExpired(token) ? getSubject(token) : null;
 		} catch (SignatureException e) {
             LOGGER.error("Invalid JWT signature: {}", e.getMessage());
         } catch (MalformedJwtException e) {
@@ -80,7 +85,11 @@ public class JwtTokenService implements JwtTokenServiceInt {
             LOGGER.error("JWT token is unsupported: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
             LOGGER.error("JWT claims string is empty: {}", e.getMessage());
-        }
+        } catch(ExpiredJwtException e) {
+			LOGGER.error("JWT token has expired: {}", e.getMessage());
+		} catch (JwtException e) {
+			LOGGER.error("JWT token is invalid: {}", e.getMessage());
+		}
 		return null;
 	}
 
@@ -95,14 +104,29 @@ public class JwtTokenService implements JwtTokenServiceInt {
 
 	@Override
 	public Date getExpirationDate(String token) {
-		return getClaimFromToken(token, Claims::getExpiration);
-	}
+        try {
+            return getClaimFromToken(token, Claims::getExpiration);
+        } catch (SignatureException e) {
+			LOGGER.error("Invalid JWT signature: {}", e.getMessage());
+		} catch (MalformedJwtException e) {
+			LOGGER.error("Invalid JWT token: {}", e.getMessage());
+		} catch (UnsupportedJwtException e) {
+			LOGGER.error("JWT token is unsupported: {}", e.getMessage());
+		} catch (IllegalArgumentException e) {
+			LOGGER.error("JWT claims string is empty: {}", e.getMessage());
+		} catch(ExpiredJwtException e) {
+			LOGGER.error("JWT token has expired: {}", e.getMessage());
+		} catch (JwtException e) {
+			LOGGER.error("JWT token is invalid: {}", e.getMessage());
+		}
+		return Date.from(Instant.now());
+    }
 
 	private String getSubject(String token) {
 		return getClaimFromToken(token, Claims::getSubject);
 	}
 
-	private boolean isExpired(String token) {
+	private boolean isNotExpired(String token) {
 		return !getExpirationDate(token).before(new Date());
 	}
 }

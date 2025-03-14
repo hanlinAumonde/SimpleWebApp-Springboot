@@ -1,11 +1,12 @@
 package com.devStudy.chat.config;
 
-import java.util.function.Supplier;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
 import com.devStudy.chat.security.*;
 import com.devStudy.chat.service.implementations.JwtTokenService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,19 +22,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
-import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
-import org.springframework.util.StringUtils;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.devStudy.chat.service.implementations.UserService;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
@@ -147,39 +138,20 @@ public class WebSecurityConfig {
 						.successHandler(new AccountAuthenticationSuccessHandler(jwtTokenService))
 						.failureHandler(new AccountAuthenticationFailureHandler())
                 )
-                
-//                .logout(logout ->
-//                    logout
-//	                    .logoutUrl("/api/login/logout")
-//	                    .invalidateHttpSession(true)
-//	                    .clearAuthentication(true)
-//	                    .logoutSuccessHandler(new AccountLogoutSuccessHandler())
-//                )
+
                 .exceptionHandling(exception -> 
                     exception.authenticationEntryPoint((request, response, authException) -> {
                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                         response.setContentType("application/json;charset=UTF-8");
-                        response.getWriter().write("{\"message\":\"未登录\"}");
+                        response.getWriter().write(new ObjectMapper().writeValueAsString(
+                                Map.ofEntries(
+                                        Map.entry("status", "error"),
+                                        Map.entry("message", "Unauthorized"),
+                                        Map.entry("isAuthenticated", false)
+                                )
+                        ));
                     })
                 )
                 .build();
     }
-    
-//    //Ref: https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html#csrf-integration-javascript
-//    final class SpaCsrfTokenRequestHandler implements CsrfTokenRequestHandler {
-//    	private final CsrfTokenRequestHandler plain = new CsrfTokenRequestAttributeHandler();
-//    	private final CsrfTokenRequestHandler xor = new XorCsrfTokenRequestAttributeHandler();
-//
-//    	@Override
-//    	public void handle(HttpServletRequest request, HttpServletResponse response, Supplier<CsrfToken> csrfToken) {
-//    		this.xor.handle(request, response, csrfToken);
-//    		csrfToken.get();
-//    	}
-//
-//    	@Override
-//    	public String resolveCsrfTokenValue(HttpServletRequest request, CsrfToken csrfToken) {
-//    		String headerValue = request.getHeader(csrfToken.getHeaderName());
-//    		return (StringUtils.hasText(headerValue) ? this.plain : this.xor).resolveCsrfTokenValue(request, csrfToken);
-//    	}
-//    }
 }
