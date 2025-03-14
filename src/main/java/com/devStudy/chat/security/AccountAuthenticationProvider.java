@@ -1,5 +1,6 @@
 package com.devStudy.chat.security;
 
+import com.devStudy.chat.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -9,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.devStudy.chat.service.implementations.UserService;
@@ -21,8 +23,8 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
 
     private final Logger logger = LoggerFactory.getLogger(AccountAuthenticationProvider.class);
 
-    private PasswordEncoder passwordEncoder;
-    private UserService userService;
+    private final PasswordEncoder passwordEncoder;
+    private final UserService userService;
     
 	public AccountAuthenticationProvider(PasswordEncoder passwordEncoder, UserService userService) {
 		this.passwordEncoder = passwordEncoder;
@@ -39,17 +41,18 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
         logger.info("Commence l'authentification");
         String userEmail = authentication.getName();
         String password = authentication.getCredentials().toString();
-        logger.info("userEmail : " + userEmail);
-        logger.info("password : " + password);
+        logger.info("userEmail : {}", userEmail);
+        logger.info("password : {}", password);
 
         UserDetails account = userService.loadUserByUsername(userEmail);
 
         Collection<? extends GrantedAuthority> AUTHORITIES = account.getAuthorities();
         
-        //if (w.matches(password, account.get().getPassword())) {
         if (passwordEncoder.matches(password, account.getPassword())) {
             userService.resetFailedAttemptsOfUser(account.getUsername());
-            return new UsernamePasswordAuthenticationToken(userService.findUserOrAdmin(account.getUsername(), false).get(), password, AUTHORITIES);
+            User user = userService.findUserOrAdmin(account.getUsername(), false)
+                    .orElseThrow(() -> new UsernameNotFoundException("Internal error : " + account.getUsername() + " not found after checking password"));
+            return new UsernamePasswordAuthenticationToken(user, password, AUTHORITIES);
         }
         throw FailedLoginAttemptsException(account);
     }
@@ -68,7 +71,7 @@ public class AccountAuthenticationProvider implements AuthenticationProvider {
             logger.info("Trops de tentatives malveillantes, votre compte est blouqé");
             return new BadCredentialsException("Trops de tentatives malveillantes, votre compte est blouqé");
         }
-        logger.info("Mot de passe incorrect. Plus que " + (MAX_FAILED_ATTEMPTS - attempts) + " tentatives avant blocage");
+        logger.info("Mot de passe incorrect. Plus que {} tentatives avant blocage", MAX_FAILED_ATTEMPTS - attempts);
         return new BadCredentialsException("Mot de passe incorrect. Plus que " + (MAX_FAILED_ATTEMPTS - attempts) + " tentatives avant blocage");
     }
 }

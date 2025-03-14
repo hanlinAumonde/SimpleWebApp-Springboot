@@ -14,7 +14,7 @@ import com.devStudy.chat.websocket.ChatWebSocketHandler;
 @EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer {
 		
-	private ChatWebSocketHandler chatWebSocketHandler;
+	private final ChatWebSocketHandler chatWebSocketHandler;
 	
 	public WebSocketConfig(ChatWebSocketHandler chatWebSocketHandler) {
 		this.chatWebSocketHandler = chatWebSocketHandler;

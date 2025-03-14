@@ -1,5 +1,6 @@
 package com.devStudy.chat.service.interfaces;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 
 import com.devStudy.chat.dto.CreateCompteDTO;
@@ -11,7 +12,10 @@ import java.util.Optional;
 
 public interface UserServiceInt {
 
-    UserDTO getLoggedUser();
+    UserDTO getLoggedUser(String email);
+
+    long getUserId(HttpServletRequest request);
+
     Page<User> findAllUsersByPage(int page);
 
     CreateCompteDTO addUser(CreateCompteDTO user);
@@ -24,12 +28,6 @@ public interface UserServiceInt {
 
     Page<UserDTO> findUsersNotInvitedToChatroomByPage(long chatroomId, long userId, int page);
 
-    void deleteUserById(Long id);
-
-    Page<User> findAllInactiveUsersByPage(int page);
-
-    void setStatusOfUser(String userEmail,boolean status);
-
     int incrementFailedAttemptsOfUser(String userEmail);
 
     void lockUserAndResetFailedAttempts(String userEmail);
@@ -38,10 +36,10 @@ public interface UserServiceInt {
 
     Optional<User> findUserOrAdmin(String email, boolean isAdmin);
 
-    Map<String, String> sendResetPasswordEmail(String email);
+    Map<String, String> sendResetPwdEmailRequestToMQ(String email);
+    //Map<String, String> sendResetPasswordEmail(String email);
 
     boolean resetPassword(String jwtToken, String password);
 
-    boolean checkUserLoginStatus();
-	void resetFailedAttemptsOfUser(String username);
+    void resetFailedAttemptsOfUser(String username);
 }

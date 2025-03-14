@@ -1,5 +1,6 @@
 package com.devStudy.chat.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -7,8 +8,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.Arrays;
+import java.util.List;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +29,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.devStudy.chat.dto.ChatroomDTO;
 import com.devStudy.chat.dto.ChatroomWithOwnerAndStatusDTO;
-import com.devStudy.chat.dto.UserDTO;
 import com.devStudy.chat.service.implementations.ChatroomService;
 import com.devStudy.chat.service.implementations.UserService;
 
@@ -59,9 +60,7 @@ public class UserManageControllerTest {
 	
 	@BeforeEach
 	void TestSetup() {
-		UserDTO user = new UserDTO();
-        user.setId(1L);
-        when(userService.getLoggedUser()).thenReturn(user);
+		when(userService.getUserId(any(HttpServletRequest.class))).thenReturn(1L);
 	}
 	
 	@Test
@@ -83,7 +82,7 @@ public class UserManageControllerTest {
 	@Test
 	void testGetChatroomsOwnedByUser() throws Exception {
 		when(chatroomService.getChatroomsOwnedOfUserByPage(1L, 0)).thenReturn(
-				new PageImpl<>(Arrays.asList(new ChatroomDTO()))
+				new PageImpl<>(List.of(new ChatroomDTO()))
 		);
 		
 		// Test with the valid user id
@@ -108,7 +107,7 @@ public class UserManageControllerTest {
 	@Test
 	void testGetChatroomsJoinedByUser() throws Exception {
 		when(chatroomService.getChatroomsJoinedOfUserByPage(1L, false, 0))
-				.thenReturn(new PageImpl<>(Arrays.asList(new ChatroomWithOwnerAndStatusDTO())));
+				.thenReturn(new PageImpl<>(List.of(new ChatroomWithOwnerAndStatusDTO())));
 
 		// Test with the valid user id
 		mockMvc.perform(get("/api/users/1/chatrooms/joined")

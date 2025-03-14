@@ -16,11 +16,11 @@ public class ChatHandShakeInterceptor implements HandshakeInterceptor {
 	public boolean beforeHandshake(ServerHttpRequest request, 
 								   ServerHttpResponse response, 
 								   WebSocketHandler wsHandler,
-								   Map<String, Object> attributes) throws Exception {
+								   Map<String, Object> attributes) {
 		// Get URI template variables
 		UriTemplate uriTemplate = new UriTemplate(CHAT_ENDPOINT);
 		Map<String, String> uriTemplateVars = uriTemplate.match(request.getURI().toString());
-		if(uriTemplateVars != null) {
+		if(!uriTemplateVars.isEmpty()) {
 			String chatroomId = uriTemplateVars.get("chatroomId");
 			String userId = uriTemplateVars.get("userId");
 			

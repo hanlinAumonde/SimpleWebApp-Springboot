@@ -7,12 +7,11 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import com.devStudy.chat.model.Chatroom;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface ChatroomRepository extends JpaRepository<Chatroom, Long> {
     Optional<Chatroom> findById(long chatroomId);
-    Optional<Chatroom> findByTitreAndDescriptionAndHoraireCommenceAndHoraireTermine(String titre, String description, LocalDateTime horaireCommence, LocalDateTime horaireTermine);
+    //Optional<Chatroom> findByTitreAndDescriptionAndHoraireCommenceAndHoraireTermine(String titre, String description, LocalDateTime horaireCommence, LocalDateTime horaireTermine);
 
     //Cette méthode permet de mise à jour le statut d'une chatroom
     @Modifying

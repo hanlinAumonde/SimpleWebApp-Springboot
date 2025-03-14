@@ -1,5 +1,6 @@
 package com.devStudy.chat.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,8 +38,8 @@ public class ChatroomManageController {
 	 * un code 409 (conflit)
 	 */
 	@PostMapping("/create")
-	public ResponseEntity<Boolean> createChatroom(@RequestBody ChatroomRequestDTO chatroomRequestDTO) {
-		if (chatroomService.createChatroom(chatroomRequestDTO, userService.getLoggedUser().getId())) {
+	public ResponseEntity<Boolean> createChatroom(@RequestBody ChatroomRequestDTO chatroomRequestDTO, HttpServletRequest request) {
+		if (chatroomService.createChatroom(chatroomRequestDTO, userService.getUserId(request))) {
 			return ResponseEntity.ok(true);
 		}
 		return ResponseEntity.status(409).body(false);
@@ -49,8 +50,8 @@ public class ChatroomManageController {
 	 * la suppression, on va retourner un code 409 (conflit)
 	 */
 	@DeleteMapping("/{chatroomId}")
-	public ResponseEntity<Boolean> deleteChatroom(@PathVariable long chatroomId) {
-		if (chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),chatroomId)) {
+	public ResponseEntity<Boolean> deleteChatroom(@PathVariable long chatroomId, HttpServletRequest request) {
+		if (chatroomService.checkUserIsOwnerOfChatroom(userService.getUserId(request), chatroomId)) {
 			if (chatroomService.deleteChatRoom(chatroomId)) {
 				return ResponseEntity.ok(true);
 			}
@@ -64,10 +65,10 @@ public class ChatroomManageController {
 	 * n'existe pas, on va retourner un code 404 (non trouvé)
 	 */
 	@GetMapping("/{chatroomId}")
-	public ResponseEntity<ModifyChatroomDTO> getChatroomForModify(@PathVariable long chatroomId) {
+	public ResponseEntity<ModifyChatroomDTO> getChatroomForModify(@PathVariable long chatroomId, HttpServletRequest request) {
 		Optional<ModifyChatroomDTO> chatroom = chatroomService.findChatroom(chatroomId);
-		return chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),chatroomId)?
-				  chatroom.map(value -> ResponseEntity.ok(value))
+		return chatroomService.checkUserIsOwnerOfChatroom(userService.getUserId(request), chatroomId)?
+				  chatroom.map(ResponseEntity::ok)
 						.orElseGet(() -> ResponseEntity.status(404).body(new ModifyChatroomDTO()))
 				: ResponseEntity.status(403).body(new ModifyChatroomDTO());
 	}
@@ -80,8 +81,8 @@ public class ChatroomManageController {
 	 */
 	@GetMapping("/{chatroomId}/users/invited")
 	public ResponseEntity<Page<UserDTO>> getUsersInvitedInChatroom(@PathVariable long chatroomId,
-			@RequestParam(defaultValue = "0") int page) {
-		if (chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),chatroomId)) {
+			@RequestParam(defaultValue = "0") int page, HttpServletRequest request) {
+		if (chatroomService.checkUserIsOwnerOfChatroom(userService.getUserId(request), chatroomId)) {
 			return ResponseEntity.ok(userService.findUsersInvitedToChatroomByPage(chatroomId, page));
 		}
 		return ResponseEntity.status(403).body(Page.empty());
@@ -95,9 +96,9 @@ public class ChatroomManageController {
 	 */
 	@GetMapping("/{chatroomId}/users/not-invited")
 	public ResponseEntity<Page<UserDTO>> getUsersNotInvitedInChatroom(@PathVariable long chatroomId,
-			@RequestParam(defaultValue = "0") int page) {
-		long userId = userService.getLoggedUser().getId();
-		if (chatroomService.checkUserIsOwnerOfChatroom(userId,chatroomId)) {
+			@RequestParam(defaultValue = "0") int page, HttpServletRequest request) {
+		final long userId = userService.getUserId(request);
+		if (chatroomService.checkUserIsOwnerOfChatroom(userId, chatroomId)) {
 			return ResponseEntity.ok(userService.findUsersNotInvitedToChatroomByPage(chatroomId, userId, page));
 		}
 		return ResponseEntity.status(403).body(Page.empty());
@@ -105,8 +106,8 @@ public class ChatroomManageController {
 
 	@PutMapping("/{chatroomId}")
 	public ResponseEntity<Boolean> updateChatroomDetails(@PathVariable long chatroomId,
-			@RequestBody ModifyChatroomRequestDTO chatroomRequest) {
-		if (chatroomService.checkUserIsOwnerOfChatroom(userService.getLoggedUser().getId(),chatroomId)) {
+			@RequestBody ModifyChatroomRequestDTO chatroomRequest, HttpServletRequest request) {
+		if (chatroomService.checkUserIsOwnerOfChatroom(userService.getUserId(request), chatroomId)) {
 			if (chatroomService.updateChatroom(chatroomRequest, chatroomId)) {
 				return ResponseEntity.ok(true);
 			}
@@ -119,8 +120,8 @@ public class ChatroomManageController {
 	 * Cette méthode permet qu'un utilisateur quitte une chatroom
 	 */
 	@DeleteMapping("/{chatroomId}/users/invited/{userId}")
-	public ResponseEntity<Boolean> leaveChatroom(@PathVariable long chatroomId, @PathVariable long userId) {
-		if(userId == userService.getLoggedUser().getId()) {
+	public ResponseEntity<Boolean> leaveChatroom(@PathVariable long chatroomId, @PathVariable long userId, HttpServletRequest request) {
+		if(userId == userService.getUserId(request)) {
 			if (chatroomService.deleteUserInvited(chatroomId, userId)) {
 				return ResponseEntity.ok(true);
 			} else {
@@ -138,7 +139,7 @@ public class ChatroomManageController {
 	@GetMapping("/{chatroomId}/members")
 	public ResponseEntity<List<UserDTO>> getAllMembersInChatroom(@PathVariable long chatroomId) {
 		List<UserDTO> users = chatroomService.getAllUsersInChatroom(chatroomId);
-		if (users.size() > 0) {
+		if (!users.isEmpty()) {
 			return ResponseEntity.ok(users);
 		}
 		return ResponseEntity.status(500).body(new ArrayList<>());

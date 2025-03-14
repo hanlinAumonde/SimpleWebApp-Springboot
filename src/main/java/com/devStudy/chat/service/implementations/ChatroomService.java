@@ -39,21 +39,23 @@ public class ChatroomService implements ChatroomServiceInt {
 
     private final Logger logger = LoggerFactory.getLogger(ChatroomService.class);
 
+    private final UserRepository userRepository;
+    private final ChatroomRepository chatroomRepository;
+    private final ApplicationEventPublisher publisher;
+
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private ChatroomRepository chatroomRepository;
-    
-    @Autowired
-    private ApplicationEventPublisher publisher;
+    public ChatroomService(UserRepository userRepository, ChatroomRepository chatroomRepository, ApplicationEventPublisher publisher) {
+        this.userRepository = userRepository;
+        this.chatroomRepository = chatroomRepository;
+        this.publisher = publisher;
+    }
 
     /**
      * Cette méthode permet de trouver le chatroom correspondant à l'id passé en paramètre
      */
     @Override
     public Optional<ModifyChatroomDTO> findChatroom(long chatroomId) {
-    	Optional<ModifyChatroomDTO> chatroom = chatroomRepository.findById(chatroomId).map(DTOMapper::toModifyChatroomDTO);
-        return chatroom;
+    	return chatroomRepository.findById(chatroomId).map(DTOMapper::toModifyChatroomDTO);
     }
 
     /**
@@ -83,7 +85,7 @@ public class ChatroomService implements ChatroomServiceInt {
                 }
             }
             
-            User creator = userRepository.findById(userId).get();
+            User creator = userRepository.findById(userId).orElseThrow();
             
             // etape 1 : ajouter le créateur du chatroom
             chatroom.setCreator(creator);
@@ -99,7 +101,7 @@ public class ChatroomService implements ChatroomServiceInt {
             chatroomRepository.save(chatroom);
             return true;
         } catch (Exception e) {
-            logger.error("Error while creating chatroom : " + e.getMessage());
+            logger.error("Error while creating chatroom : {}", e.getMessage());
             return false;
         }
     }
@@ -107,21 +109,22 @@ public class ChatroomService implements ChatroomServiceInt {
     /**
      * Cette méthode permet de trouver les chatrooms crées/joints par un utilisateur en Page(size = 5)
      */
-    @Transactional(readOnly = true)
     private Page<Chatroom> getChatroomsOwnedOrJoinedOfUserByPage(long userId, boolean isOwner, int page) {
         Pageable pageable = PageRequest.of(page, DefaultPageSize_Chatrooms, Sort.sort(Chatroom.class).by(Chatroom::getTitre).ascending());
         return isOwner? chatroomRepository.findChatroomsCreatedByUserByPage(userId, pageable) :
         				chatroomRepository.findChatroomsJoinedOfUserByPage(userId,pageable);
     }
-    
+
+    @Transactional(readOnly = true)
     @Override
 	public Page<ChatroomDTO> getChatroomsOwnedOfUserByPage(long userId, int page) {
 		Page<Chatroom> chatrooms = getChatroomsOwnedOrJoinedOfUserByPage(userId, true, page);
-		return chatrooms.map(chatroom -> {
-			return DTOMapper.toChatroomDTO(chatroom, chatroom.isActive() && !chatroom.hasNotStarted());
-		});
+		return chatrooms.map(chatroom ->
+                DTOMapper.toChatroomDTO(chatroom, chatroom.isActive() && !chatroom.hasNotStarted())
+		);
 	}
-    
+
+    @Transactional(readOnly = true)
     @Override
 	public Page<ChatroomWithOwnerAndStatusDTO> getChatroomsJoinedOfUserByPage(long userId, boolean isOwner, int page) {
     	Page<Chatroom> chatrooms = getChatroomsOwnedOrJoinedOfUserByPage(userId, isOwner, page);
@@ -171,7 +174,7 @@ public class ChatroomService implements ChatroomServiceInt {
             publisher.publishEvent(new RemoveChatroomEvent(chatroomId));
             return true;
         }catch (Exception e){
-            logger.error("Error while deleting chatroom with id " + chatroomId + " : " + e.getMessage());
+            logger.error("Error while deleting chatroom with id {} : {}", chatroomId, e.getMessage());
             return false;
         }
     }
@@ -209,7 +212,7 @@ public class ChatroomService implements ChatroomServiceInt {
             publisher.publishEvent(new ChangeChatroomMemberEvent(chatroomId, List.of(), List.of(user)));
             return true;
         }catch (Exception e){
-            logger.error("Error while deleting user with id " + userId + " from chatroom with id " + chatroomId + " : " + e.getMessage());
+            logger.error("Error while deleting user with id {} from chatroom with id {} : {}", userId, chatroomId, e.getMessage());
             return false;
         }
     }
@@ -221,7 +224,7 @@ public class ChatroomService implements ChatroomServiceInt {
     @Override
     public boolean updateChatroom(ModifyChatroomRequestDTO chatroomRequestDTO, long chatroomId) {
         try{
-            Chatroom chatroom = chatroomRepository.findById(chatroomId).get();
+            Chatroom chatroom = chatroomRepository.findById(chatroomId).orElseThrow();
             boolean isChanged = false;
             if(!chatroom.getTitre().equals(chatroomRequestDTO.getTitre())){
                 chatroom.setTitre(chatroomRequestDTO.getTitre());
@@ -246,7 +249,11 @@ public class ChatroomService implements ChatroomServiceInt {
             }
             // ajouter les utilisateurs invités
 			for (UserDTO user : chatroomRequestDTO.getListAddedUsers()) {
-				User userInvited = userRepository.findById(user.getId()).get();
+                Optional<User> userOptional = userRepository.findById(user.getId());
+				if(userOptional.isEmpty()) {
+                    continue;
+                }
+                User userInvited = userOptional.get();
 				if(!chatroom.getMembers().contains(userInvited)) {
 					chatroom.getMembers().add(userInvited);
 					userInvited.getJoinedRooms().add(chatroom);
@@ -256,7 +263,11 @@ public class ChatroomService implements ChatroomServiceInt {
             
 			// supprimer les utilisateurs invités
 			for (UserDTO user : chatroomRequestDTO.getListRemovedUsers()) {
-				User userRemoved = userRepository.findById(user.getId()).get();
+				Optional<User> userOptional = userRepository.findById(user.getId());
+                if(userOptional.isEmpty()) {
+                    continue;
+                }
+                User userRemoved = userOptional.get();
 				if (chatroom.getMembers().contains(userRemoved) && !chatroom.getCreator().equals(userRemoved)) {
 					chatroom.getMembers().remove(userRemoved);
 					userRemoved.getJoinedRooms().remove(chatroom);
@@ -277,7 +288,7 @@ public class ChatroomService implements ChatroomServiceInt {
             );
             return true;
         }catch (RuntimeException e){
-            logger.error("Error while updating chatroom with id " + chatroomId + " : " + e.getMessage());
+            logger.error("Error while updating chatroom with id {} : {}", chatroomId, e.getMessage());
             return false;
         }
     }
@@ -290,7 +301,7 @@ public class ChatroomService implements ChatroomServiceInt {
         try {
             return chatroomRepository.findByIdAndCreatorId(chatroomId, userId).isPresent();
         } catch (RuntimeException e) {
-            logger.error("Error while checking if user with id " + userId + " is owner of chatroom with id " + chatroomId + " : " + e.getMessage());
+            logger.error("Error while checking if user with id {} is owner of chatroom with id {} : {}", userId, chatroomId, e.getMessage());
             return false;
         }
     }

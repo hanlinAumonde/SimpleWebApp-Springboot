@@ -20,17 +20,13 @@ public class AccountAuthenticationFailureHandler implements AuthenticationFailur
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
-        /*
-    	String error = exception.getMessage();
-        request.getSession().setAttribute("error", error);
-        response.sendRedirect("/login");
-        */
     	response.setContentType("application/json;charset=UTF-8");
     	response.setStatus(HttpServletResponse.SC_OK);
     	
     	Map<String, Object> result = new HashMap<>();
         result.put("status", "error");
         result.put("msg", "Failed login : " + exception.getMessage());
+        result.put("isAuthenticated", false);
         
         response.getWriter().write(mapper.writeValueAsString(result));
     }

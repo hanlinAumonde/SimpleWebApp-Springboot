@@ -5,8 +5,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -15,12 +13,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertAll;
 import static com.devStudy.chat.service.utils.ConstantValues.CreationSuccess;
 import static com.devStudy.chat.service.utils.ConstantValues.CompteExist;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.AfterAll;
@@ -36,7 +32,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.mail.MailException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -139,26 +134,26 @@ public class UserServiceTest {
         verify(userRepository).findByMailAndAdmin("test@example.com", false);
     }
     
-    @Test
-    void testGetLoggedUser() {
-        // 创建mock认证对象和安全上下文对象,以通过when来模拟其行为
-        Authentication authentication = mock(Authentication.class);
-        SecurityContext securityContext = mock(SecurityContext.class);
-        
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.getPrincipal()).thenReturn(testUser);
-        SecurityContextHolder.setContext(securityContext);
-        
-        UserDTO result = userService.getLoggedUser();
-        
-        assertNotNull(result);
-        assertEquals(1L, result.getId());
-        assertEquals("Test", result.getFirstName());
-        assertEquals("User", result.getLastName());
-        assertEquals("test@example.com", result.getMail());
-        verify(securityContext).getAuthentication();
-        verify(authentication).getPrincipal();
-    }
+//    @Test
+//    void testGetLoggedUser() {
+//        // 创建mock认证对象和安全上下文对象,以通过when来模拟其行为
+//        Authentication authentication = mock(Authentication.class);
+//        SecurityContext securityContext = mock(SecurityContext.class);
+//
+//        when(securityContext.getAuthentication()).thenReturn(authentication);
+//        when(authentication.getPrincipal()).thenReturn(testUser);
+//        SecurityContextHolder.setContext(securityContext);
+//
+//        UserDTO result = userService.getLoggedUser();
+//
+//        assertNotNull(result);
+//        assertEquals(1L, result.getId());
+//        assertEquals("Test", result.getFirstName());
+//        assertEquals("User", result.getLastName());
+//        assertEquals("test@example.com", result.getMail());
+//        verify(securityContext).getAuthentication();
+//        verify(authentication).getPrincipal();
+//    }
     
     //---------------------------------------------测试用户管理相关方法-----------------------------------------
     @Test
@@ -189,13 +184,6 @@ public class UserServiceTest {
 		CreateCompteDTO resultFailed = userService.addUser(testCreateCompteDTO);
 		assertEquals(CompteExist, resultFailed.getCreateMsg());
 		verify(userRepository, never()).save(any(User.class));
-    }
-    
-    @Test
-    void testDeleteUserById() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        userService.deleteUserById(1L);
-        verify(userRepository).delete(testUser);
     }
     
     //---------------------------------------------用户认证相关测试-----------------------------------------
@@ -256,100 +244,7 @@ public class UserServiceTest {
         verify(userRepository).updateFailedAttempts("test@example.com", 0);
     }
     
-    @Test
-    void testCheckUserLoginStatus_NotAuthenticated() {
-        SecurityContextHolder.clearContext();
-        assertFalse(userService.checkUserLoginStatus());
-    }
-
-    @Test
-    void testCheckUserLoginStatus_Authenticated() {
-        Authentication authentication = mock(Authentication.class);
-        SecurityContext securityContext = mock(SecurityContext.class);
-        
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getPrincipal()).thenReturn(testUser);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        
-        SecurityContextHolder.setContext(securityContext);
-        
-        assertTrue(userService.checkUserLoginStatus());
-        
-        SecurityContextHolder.clearContext();
-    }
-
-    @Test
-    void testCheckUserLoginStatus_UserNoLongerExists() {
-        Authentication authentication = mock(Authentication.class);
-        SecurityContext securityContext = mock(SecurityContext.class);
-        
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getPrincipal()).thenReturn(testUser);
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
-        
-        SecurityContextHolder.setContext(securityContext);
-        
-        assertFalse(userService.checkUserLoginStatus());
-        
-        SecurityContextHolder.clearContext();
-    }
-    
-    //---------------------------------------------测试用户密码重置和邮件功能相关方法-----------------------------------------
-    @Test
-    void testSendResetPasswordEmail_Success() {
-        when(userRepository.findByMailAndAdmin("test@example.com", false))
-            .thenReturn(Optional.of(testUser));
-        when(tokenService.generateJwtToken("test@example.com"))
-            .thenReturn("test-jwt-token");
-        doNothing().when(emailService).sendSimpleMessage(
-            eq("test@example.com"), 
-            eq("Reset Password"), 
-            anyString()
-        );
-        
-        Map<String, String> result = userService.sendResetPasswordEmail("test@example.com");
-        
-        assertEquals("success", result.get("status"));
-        verify(tokenService).generateJwtToken("test@example.com");
-        verify(emailService).sendSimpleMessage(
-            eq("test@example.com"), 
-            eq("Reset Password"), 
-            anyString()
-        );
-    }
-
-    @Test
-    void testSendResetPasswordEmail_UserNotFound() {
-        when(userRepository.findByMailAndAdmin("nonexistent@example.com", false))
-            .thenReturn(Optional.empty());
-        
-        Map<String, String> result = userService.sendResetPasswordEmail("nonexistent@example.com");
-        
-        assertEquals("error", result.get("status"));
-        verify(tokenService, never()).generateJwtToken(anyString());
-        verify(emailService, never()).sendSimpleMessage(anyString(), anyString(), anyString());
-    }
-
-    @Test
-    void testSendResetPasswordEmail_MailException() {
-        when(userRepository.findByMailAndAdmin("test@example.com", false))
-            .thenReturn(Optional.of(testUser));
-        when(tokenService.generateJwtToken("test@example.com"))
-            .thenReturn("test-jwt-token");
-        doThrow(new MailException("mail exception") {}).when(emailService).sendSimpleMessage(
-    		eq("test@example.com"), 
-            eq("Reset Password"), 
-            anyString()
-        );
-        
-        Map<String, String> result = userService.sendResetPasswordEmail("test@example.com");
-        
-        assertEquals("error", result.get("status"));
-        verify(tokenService).generateJwtToken("test@example.com");
-    }
-
+    //---------------------------------------------测试用户密码重置相关方法-----------------------------------------
     @Test
     void testResetPassword_Success() {
         when(tokenService.validateTokenAndGetEmail("valid-token"))

@@ -1,9 +1,12 @@
 package com.devStudy.chat.config;
 
-import java.util.function.Supplier;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
+import com.devStudy.chat.security.*;
+import com.devStudy.chat.service.implementations.JwtTokenService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,28 +14,17 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
-import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
-import org.springframework.util.StringUtils;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.devStudy.chat.security.AccountAuthenticationFailureHandler;
-import com.devStudy.chat.security.AccountAuthenticationProvider;
-import com.devStudy.chat.security.AccountAuthenticationSuccessHandler;
-import com.devStudy.chat.security.AccountLogoutSuccessHandler;
 import com.devStudy.chat.service.implementations.UserService;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
@@ -47,7 +39,7 @@ public class WebSecurityConfig {
 
     /**
      * C'est pour encoder le mot de passe
-     * @return
+     * @return PasswordEncoder
      */
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -58,7 +50,7 @@ public class WebSecurityConfig {
      * C'est pour instancier le AccountAuthenticationProvider avec les dépendances
      * @param passwordEncoder
      * @param userService
-     * @return
+     * @return AccountAuthenticationProvider
      */
     @Bean
     AccountAuthenticationProvider authProvider(
@@ -72,7 +64,7 @@ public class WebSecurityConfig {
      * dans l'environment global de l'application
      * @param http
      * @param authProvider
-     * @return
+     * @return AuthenticationManager
      * @throws Exception
      */
     @Bean
@@ -82,7 +74,13 @@ public class WebSecurityConfig {
         authenticationManagerBuilder.authenticationProvider(authProvider);
         return authenticationManagerBuilder.build();
     }
-    
+
+    /**
+     * C'est pour instancier le PersistentTokenRepository,
+     * stocker les tokens liés aux remember-me dans la base de données
+     * @param dataSource
+     * @return PersistentTokenRepository
+     */
     @Bean
     PersistentTokenRepository persistentTokenRepository(DataSource dataSource) {
         JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
@@ -96,21 +94,21 @@ public class WebSecurityConfig {
      * qui a le meme fonctionnement
      * @param http
      * @param persistentTokenRepository
-     * @param rememberMeServices
-     * @return
+     * @param userDetailService
+     * @return SecurityFilterChain
      */
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http, PersistentTokenRepository persistentTokenRepository, UserService userDetailService) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http,
+                                    PersistentTokenRepository persistentTokenRepository,
+                                    UserService userDetailService,
+                                    JwtAuthenticationFilter jwtAuthenticationFilter,
+                                    JwtTokenService jwtTokenService) throws Exception {
         return http    
-//        		.cors(cors -> 
-//        			cors.configurationSource(corsConfigurationSource())
-//        		)
-        		
-                .csrf(csrf -> 
-                	csrf
-                		.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                		.csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
-                )
+          
+                .csrf(AbstractHttpConfigurer::disable)
+
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 
                 .rememberMe(rememberMeConfig -> 
                 	rememberMeConfig
@@ -118,7 +116,7 @@ public class WebSecurityConfig {
 	                    .key(rememberMeKey) 
 	                    .tokenValiditySeconds(rememberMeExpirationTime)
 	                    .userDetailsService(userDetailService)  
-	                    .authenticationSuccessHandler(new AccountAuthenticationSuccessHandler())
+	                    .authenticationSuccessHandler(new AccountAuthenticationSuccessHandler(jwtTokenService))
                 )
                 
                 .authorizeHttpRequests(auth -> 
@@ -130,45 +128,28 @@ public class WebSecurityConfig {
                         .anyRequest().authenticated()
                 )
 
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+
                 .formLogin(formLogin -> 
                 	formLogin
 						.loginProcessingUrl("/api/login/login-process")
-						.successHandler(new AccountAuthenticationSuccessHandler())
+						.successHandler(new AccountAuthenticationSuccessHandler(jwtTokenService))
 						.failureHandler(new AccountAuthenticationFailureHandler())
                 )
-                
-                .logout(logout -> 
-                    logout
-	                    .logoutUrl("/api/login/logout")
-	                    .invalidateHttpSession(true)
-	                    .clearAuthentication(true)
-	                    .logoutSuccessHandler(new AccountLogoutSuccessHandler())
-                )
+
                 .exceptionHandling(exception -> 
-                exception.authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.setContentType("application/json;charset=UTF-8");
-                    response.getWriter().write("{\"message\":\"未登录\"}");
-                })
-            )
+                    exception.authenticationEntryPoint((request, response, authException) -> {
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write(new ObjectMapper().writeValueAsString(
+                                Map.ofEntries(
+                                        Map.entry("status", "error"),
+                                        Map.entry("message", "Unauthorized"),
+                                        Map.entry("isAuthenticated", false)
+                                )
+                        ));
+                    })
+                )
                 .build();
-    }
-    
-    //Ref: https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html#csrf-integration-javascript
-    final class SpaCsrfTokenRequestHandler implements CsrfTokenRequestHandler {
-    	private final CsrfTokenRequestHandler plain = new CsrfTokenRequestAttributeHandler();
-    	private final CsrfTokenRequestHandler xor = new XorCsrfTokenRequestAttributeHandler();
-
-    	@Override
-    	public void handle(HttpServletRequest request, HttpServletResponse response, Supplier<CsrfToken> csrfToken) {
-    		this.xor.handle(request, response, csrfToken);
-    		csrfToken.get();
-    	}
-
-    	@Override
-    	public String resolveCsrfTokenValue(HttpServletRequest request, CsrfToken csrfToken) {
-    		String headerValue = request.getHeader(csrfToken.getHeaderName());
-    		return (StringUtils.hasText(headerValue) ? this.plain : this.xor).resolveCsrfTokenValue(request, csrfToken);
-    	}
     }
 }

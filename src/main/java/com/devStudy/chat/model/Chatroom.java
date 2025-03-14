@@ -23,16 +23,16 @@ public class Chatroom {
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private long id;
 
-    @Column(name = "titre")
+    @Column(name = "titre", nullable = false)
     private String titre;
 
-    @Column(name = "description")
+    @Column(name = "description", nullable = false)
     private String description;
 
-    @Column(name = "horaire_commence")
+    @Column(name = "horaire_commence", nullable = false)
     private LocalDateTime horaireCommence;
 
-    @Column(name = "horaire_termine")
+    @Column(name = "horaire_termine", nullable = false)
     private LocalDateTime horaireTermine;
 
     @Column(name = "is_active")

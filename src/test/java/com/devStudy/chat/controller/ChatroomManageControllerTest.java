@@ -13,9 +13,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -74,9 +75,7 @@ public class ChatroomManageControllerTest {
 	
 	@BeforeEach
 	void TestSetup() {
-		UserDTO user = new UserDTO();
-        user.setId(1L);
-        when(userService.getLoggedUser()).thenReturn(user);
+		when(userService.getUserId(any(HttpServletRequest.class))).thenReturn(1L);
 	}
 	
 	@Test
@@ -188,7 +187,7 @@ public class ChatroomManageControllerTest {
 		UserDTO userInvited = new UserDTO();
 		userInvited.setId(2L);
 		when(userService.findUsersInvitedToChatroomByPage(1L, 0)).thenReturn(
-			new PageImpl<>(Arrays.asList(userInvited))
+			new PageImpl<>(List.of(userInvited))
 		);
 		mockMvc.perform(get(url+"1/users/invited")
 					.with(csrf()).with(user("user").roles("USER")))
@@ -220,7 +219,7 @@ public class ChatroomManageControllerTest {
         UserDTO userNotInvited = new UserDTO();
         userNotInvited.setId(2L);
         when(userService.findUsersNotInvitedToChatroomByPage(1L, 1L, 0)).thenReturn(
-            new PageImpl<>(Arrays.asList(userNotInvited))
+            new PageImpl<>(List.of(userNotInvited))
         );
         mockMvc.perform(get(url+"1/users/not-invited")
                     .with(csrf()).with(user("user").roles("USER")))
@@ -319,7 +318,7 @@ public class ChatroomManageControllerTest {
 		String url = "/api/chatrooms/";
 		UserDTO user = new UserDTO();
 		user.setId(2L);
-		when(chatroomService.getAllUsersInChatroom(1L)).thenReturn(Arrays.asList(user));
+		when(chatroomService.getAllUsersInChatroom(1L)).thenReturn(List.of(user));
 	
 		// test getAllMembersInChatroom successfully
 		mockMvc.perform(get(url+"1/members")
@@ -329,7 +328,7 @@ public class ChatroomManageControllerTest {
 				.andExpect(jsonPath("$[0].id").value(2));
 		
 		// test getAllMembersInChatroom failed
-		when(chatroomService.getAllUsersInChatroom(1L)).thenReturn(Arrays.asList());
+		when(chatroomService.getAllUsersInChatroom(1L)).thenReturn(List.of());
 		mockMvc.perform(get(url+"1/members")
 					.with(csrf()).with(user("user").roles("USER")))
 				.andExpect(status().isInternalServerError())
@@ -347,7 +346,7 @@ public class ChatroomManageControllerTest {
 		String url = "/api/chatrooms/";
 		ChatMsgDTO chatMsgDTO = new ChatMsgDTO();
 		chatMsgDTO.setMessage("Test message");
-		when(chatMessageService.getChatMessagesByChatroomIdByPage(1L, 0)).thenReturn(Arrays.asList(chatMsgDTO));
+		when(chatMessageService.getChatMessagesByChatroomIdByPage(1L, 0)).thenReturn(List.of(chatMsgDTO));
 
 		// test getHistoryMsgByChatroomIdAndPage successfully
 		mockMvc.perform(get(url+"1/history")

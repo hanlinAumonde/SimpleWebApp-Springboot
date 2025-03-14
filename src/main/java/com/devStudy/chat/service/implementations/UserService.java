@@ -1,7 +1,11 @@
 package com.devStudy.chat.service.implementations;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -26,16 +30,10 @@ import com.devStudy.chat.dto.UserDTO;
 import com.devStudy.chat.model.User;
 import com.devStudy.chat.service.interfaces.UserServiceInt;
 
-import jakarta.annotation.Resource;
 
-import static com.devStudy.chat.service.utils.ConstantValues.DefaultPageSize_Users;
-import static com.devStudy.chat.service.utils.ConstantValues.CreationSuccess;
-import static com.devStudy.chat.service.utils.ConstantValues.CompteExist;
+import java.util.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import static com.devStudy.chat.service.utils.ConstantValues.*;
 
 @Service
 public class UserService implements UserServiceInt, UserDetailsService {
@@ -45,18 +43,20 @@ public class UserService implements UserServiceInt, UserDetailsService {
 	@Value("${chatroomApp.FrontEndURL}")
 	private String FrontEndURL;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final EmailService emailService;
+    private final JwtTokenService tokenService;
+    private final RabbitTemplate rabbitTemplate;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Resource
-    private EmailService emailService;
-    
-    @Resource
-    private JwtTokenService tokenService;
-
+    public UserService(PasswordEncoder passwordEncoder, UserRepository userRepository, EmailService emailService, JwtTokenService tokenService, RabbitTemplate rabbitTemplate) {
+        this.passwordEncoder = passwordEncoder;
+        this.userRepository = userRepository;
+        this.emailService = emailService;
+        this.tokenService = tokenService;
+        this.rabbitTemplate = rabbitTemplate;
+    }
     
     private Pageable getPageableSetting(int page) {
     	var sortConds = Sort.sort(User.class).by(User::getFirstName).ascending()
@@ -76,10 +76,15 @@ public class UserService implements UserServiceInt, UserDetailsService {
      * Cette méthode permet de récupérer un utilisateur connecté
      */
     @Override
-    public UserDTO getLoggedUser() {
+    public UserDTO getLoggedUser(String email) {
         return DTOMapper.toUserDTO(
-        	(User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()
+        	findUserOrAdmin(email,false).orElse(new User())
         );
+    }
+
+    @Override
+    public long getUserId(HttpServletRequest request){
+        return request.getAttribute("userId") == null? 0 : (long) request.getAttribute("userId");
     }
 
     /**
@@ -91,7 +96,7 @@ public class UserService implements UserServiceInt, UserDetailsService {
     public CreateCompteDTO addUser(CreateCompteDTO user) {
         List<User> users = userRepository.findAll();
         for(User u : users){
-            if(u.getMail() == user.getMail()){
+            if(Objects.equals(u.getMail(), user.getMail())){
                 user.setCreateMsg(CompteExist);
                 return user;
             }
@@ -145,39 +150,12 @@ public class UserService implements UserServiceInt, UserDetailsService {
     }
 
     /**
-     * Cette méthode permet de supprimer un utilisateur
-     */
-    @Transactional
-    @Override
-    public void deleteUserById(Long id) {
-        User user = userRepository.findById(id).get();
-        userRepository.delete(user);
-    }
-
-    /**
-     * Cette méthode permet de trouver tous les utilisateurs désactivés
-     */
-    @Override
-    public Page<User> findAllInactiveUsersByPage(int page) {
-        return userRepository.findByActive(false,this.getPageableSetting(page));
-    }
-
-    /**
-     * Cette méthode permet de mise à jour le statut d'un utilisateur
-     */
-    @Transactional
-    @Override
-    public void setStatusOfUser(String userEmail,boolean status) {
-        userRepository.updateActive(userEmail,status);
-    }
-
-    /**
      * Cette méthode permet de mise à jour le nombre d'essais de connexion d'un utilisateur
      */
     @Transactional
     @Override
-    public int incrementFailedAttemptsOfUser(String userEmail) {
-    	int failedAttempts = findUserOrAdmin(userEmail, false).get().getFailedAttempts();
+    public int incrementFailedAttemptsOfUser(String userEmail) throws NoSuchElementException {
+    	int failedAttempts = findUserOrAdmin(userEmail, false).orElseThrow().getFailedAttempts();
         userRepository.updateFailedAttempts(userEmail,failedAttempts+1);
         return failedAttempts+1;
     }
@@ -208,39 +186,53 @@ public class UserService implements UserServiceInt, UserDetailsService {
         return userRepository.findByMailAndAdmin(email, isAdmin);
     }
 
-    /**
-     * Cette méthode permet de construire un email de réinitialisation de mot de passe et de l'envoyer à l'utilisateur
-     */
     @Override
-    public Map<String, String> sendResetPasswordEmail(String email) {
-    	Map<String, String> response = new HashMap<>();
+    public Map<String,String> sendResetPwdEmailRequestToMQ(String email){
+        Map<String,String> map = new HashMap<>();
+        try{
+            rabbitTemplate.send(RABBITMQ_EXCHANGE_NAME,ROUTING_KEY_RET_PASSWORD,new Message(email.getBytes("UTF-8")));
+            map.put("status","request-sent");
+            map.put("msg", """
+                            Demande envoyée, si vous avez un compte avec cet email,
+                            vous recevrez un email de réinitialisation de mot de passe
+                            Veuillez reessayer dans 60s si vous n'avez pas reçu l'email
+                          """);
+        }catch (Exception e){
+            LOGGER.error("sendResetPwdEmailRequestToMQ error",e);
+            map.put("status","error");
+            map.put("msg","Erreur lors de l'envoi de la demande de réinitialisation de mot de passe");
+        }
+        return map;
+    }
+
+    /**
+     * Cette méthode permet d'envoyer un mail de réinitialisation de mot de passe
+     */
+    @RabbitListener(queues = RABBITMQ_QUEUE_Q1)
+    public void sendResetPasswordEmail(String email) {
     	try {
 	    	if(findUserOrAdmin(email, false).isPresent()) {
-	    		String jwtToken = tokenService.generateJwtToken(email);
+	    		String jwtToken = tokenService.generateJwtToken(email, TOKEN_FLAG_RESET_PASSWORD);
 	    		String ResetPasswordLink = String.format("%s/reset-password?token=%s", FrontEndURL, jwtToken);
-	            LOGGER.info("Reset Password Link : " + ResetPasswordLink);
+                LOGGER.info("Reset Password Link : {}", ResetPasswordLink);
 	            String subject = "Reset Password";
 	            String content = String.format(
-	            		"Bonjour,\n\n"
-	            		+ "Cliquer sur le lien ci-dessous pour réinitialiser votre mot de passe :\n"
-	            		+ "%s\n\n"
-	                    + "Attention : ce lien n'est valide que pendant une demi-heure\n\n"
-	                    + "Bien cordialement,\n"
-	                    + "Chat Team"
+                        """
+                                Bonjour,
+                                
+                                Cliquer sur le lien ci-dessous pour réinitialiser votre mot de passe :
+                                %s
+                                
+                                Attention : ce lien n'est valide que pendant une demi-heure
+                                
+                                Bien cordialement,
+                                Chat Team"""
 	            		, ResetPasswordLink);
 	            emailService.sendSimpleMessage(email, subject, content);
-	            response.put("status", "success");
-	            response.put("msg",  "un mail de réinitialisation de mot de passe a été envoyé à l'adresse " + email
-						+ ", veuillez cliquer sur le lien contenu dans le mail pour réinitialiser votre mot de passe");
-	    	}else {
-	    		response.put("status", "error");
-	    		response.put("msg", "Utilisateur non trouvé");
 	    	}
 		}catch (MailException mailException) {
-			response.put("status", "error");
-			response.put("msg", "Erreur lors de l'envoi du mail de réinitialisation de mot de passe");
-		}
-        return response;
+            LOGGER.error("Error while sending email to {}", email, mailException);
+        }
     }
 
     /**
@@ -255,18 +247,6 @@ public class UserService implements UserServiceInt, UserDetailsService {
 			return true;
 		}
 		return false;
-    }
-
-    /**
-     * Cette méthode permet de vérifier si un utilisateur est encore connecté
-     */
-    @Override
-    public boolean checkUserLoginStatus() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return (auth != null &&
-                auth.isAuthenticated() &&
-                !(auth instanceof AnonymousAuthenticationToken)) &&
-                userRepository.findById(((User) auth.getPrincipal()).getId()).isPresent();
     }
 
 	@Override
