@@ -41,14 +41,14 @@ spring:
 
   # RabittMQ 配置
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: admin
-    password: admin
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:admin}
+    password: ${RABBITMQ_PASSWORD:admin}
 
 # 应用自定义配置
 chatroomApp:
-  FrontEndURL: ${FRONT_URL}
+  FrontEndURL: ${FRONT_URL:http://localhost:4200}
   jwt:
     secret: dGhpcyBpcyBhIHRlc3Qgc2VjcmV0IGtleSBmb3IgZ2VuZXJhdGUgand0IHRva2Vucw==
     resetPwdTokenExpirationTime: 30
@@ -58,3 +58,6 @@ chatroomApp:
     expirationTime: 604800
   blackListService:
     clearExpiredTokensInterval: 900000
+
+server:
+  port: 53050

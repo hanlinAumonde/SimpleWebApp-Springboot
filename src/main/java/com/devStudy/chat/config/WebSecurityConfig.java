@@ -26,6 +26,7 @@ import org.springframework.security.web.authentication.rememberme.PersistentToke
 import com.devStudy.chat.service.implementations.UserService;
 
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -103,7 +104,10 @@ public class WebSecurityConfig {
                                     UserService userDetailService,
                                     JwtAuthenticationFilter jwtAuthenticationFilter,
                                     JwtTokenService jwtTokenService) throws Exception {
-        return http    
+        return http
+//                .cors(cors ->
+//        			cors.configurationSource(corsConfigurationSource())
+//        		)
           
                 .csrf(AbstractHttpConfigurer::disable)
 
@@ -123,8 +127,7 @@ public class WebSecurityConfig {
                 	auth
                 		.requestMatchers("/api/users/**","/api/chatrooms/**").hasRole("USER")
                         .requestMatchers("/api/login/**").permitAll()
-                        //.requestMatchers("ws://localhost:8080/**").hasRole("USER")
-                        .requestMatchers("ws://").hasRole("USER")
+                        .requestMatchers("/ws/chatroom/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )
 
@@ -152,4 +155,16 @@ public class WebSecurityConfig {
                 )
                 .build();
     }
+
+//    @Bean
+//    CorsConfigurationSource corsConfigurationSource() {
+//    	CorsConfiguration corsConfiguration = new CorsConfiguration();
+//        corsConfiguration.addAllowedOriginPattern("*");
+//        corsConfiguration.addAllowedHeader("*");
+//        corsConfiguration.addAllowedMethod("*");
+//        corsConfiguration.setAllowCredentials(true);
+//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//        source.registerCorsConfiguration("/**", corsConfiguration);
+//        return source;
+//	}
 }

@@ -32,7 +32,7 @@ public final class ConstantValues {
     public static final String MSG_LATEST_DATE_SIGN = "latestDateSign";
     
     //Chat server
-    public static final String CHAT_ENDPOINT = "/chatroom/{chatroomId}/user/{userId}";
+    public static final String CHAT_ENDPOINT = "/ws/chatroom/{chatroomId}/user/{userId}";
     //public static final String CHAT_URI_PATTERN = "http://localhost:8080/chatroom/{chatroomId}/user/{userId}";
     
     // WebSocket broadcast types
