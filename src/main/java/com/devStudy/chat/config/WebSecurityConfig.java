@@ -7,6 +7,7 @@ import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -37,6 +38,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
+@EnableSpringDataWebSupport(
+        pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO
+)
 public class WebSecurityConfig {
 	
 	@Value("${chatroomApp.rememberMe.key}")
@@ -131,7 +135,7 @@ public class WebSecurityConfig {
                 	auth
                 		.requestMatchers("/api/users/**","/api/chatrooms/**").hasRole("USER")
                         .requestMatchers("/api/login/**").permitAll()
-                        .requestMatchers("ws://localhost:8080/**").hasRole("USER")
+                        .requestMatchers("/ws/chatroom/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )
 
@@ -160,7 +164,7 @@ public class WebSecurityConfig {
     }
     
     //Ref: https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html#csrf-integration-javascript
-    final class SpaCsrfTokenRequestHandler implements CsrfTokenRequestHandler {
+    static final class SpaCsrfTokenRequestHandler implements CsrfTokenRequestHandler {
     	private final CsrfTokenRequestHandler plain = new CsrfTokenRequestAttributeHandler();
     	private final CsrfTokenRequestHandler xor = new XorCsrfTokenRequestAttributeHandler();
 
