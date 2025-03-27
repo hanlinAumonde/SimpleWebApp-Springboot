@@ -33,8 +33,7 @@ public final class ConstantValues {
     
     //Chat server
     public static final String CHAT_ENDPOINT = "/ws/chatroom/{chatroomId}/user/{userId}";
-    //public static final String CHAT_URI_PATTERN = "http://localhost:8080/chatroom/{chatroomId}/user/{userId}";
-    
+
     // WebSocket broadcast types
     public static final String TO_ALL_IN_CHATROOM = "toAll";
     public static final String TO_SELF_IN_CHATROOM = "toSelf";
@@ -57,5 +56,5 @@ public final class ConstantValues {
     public static final String RABBITMQ_QUEUE_Q1 = "sendMail-queue-q1";
     public static final String RABBITMQ_QUEUE_Q2 = "sendMail-queue-q2";
     public static final String ROUTING_KEY_RET_PASSWORD = "mail.resetPassword";
-    public static final String ROUTING_KEY_VERIF_CODE = "mail.verificationCode";
+    public static final String ROUTING_KEY_VERIFY_CODE = "mail.verificationCode";
 }

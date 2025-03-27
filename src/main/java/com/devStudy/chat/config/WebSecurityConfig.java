@@ -1,15 +1,18 @@
 package com.devStudy.chat.config;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import javax.sql.DataSource;
 
 import com.devStudy.chat.security.*;
 import com.devStudy.chat.service.implementations.JwtTokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -26,10 +29,17 @@ import org.springframework.security.web.authentication.rememberme.PersistentToke
 import com.devStudy.chat.service.implementations.UserService;
 
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.web.csrf.*;
+import org.springframework.util.StringUtils;
+import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
+@EnableSpringDataWebSupport(
+        pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO
+)
 public class WebSecurityConfig {
 	
 	@Value("${chatroomApp.rememberMe.key}")
@@ -105,11 +115,15 @@ public class WebSecurityConfig {
                                     JwtAuthenticationFilter jwtAuthenticationFilter,
                                     JwtTokenService jwtTokenService) throws Exception {
         return http
-//                .cors(cors ->
-//        			cors.configurationSource(corsConfigurationSource())
-//        		)
+                .cors(cors ->
+        			cors.configurationSource(corsConfigurationSource())
+        		)
           
-                .csrf(AbstractHttpConfigurer::disable)
+                //.csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
+                )
 
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -156,15 +170,33 @@ public class WebSecurityConfig {
                 .build();
     }
 
-//    @Bean
-//    CorsConfigurationSource corsConfigurationSource() {
-//    	CorsConfiguration corsConfiguration = new CorsConfiguration();
-//        corsConfiguration.addAllowedOriginPattern("*");
-//        corsConfiguration.addAllowedHeader("*");
-//        corsConfiguration.addAllowedMethod("*");
-//        corsConfiguration.setAllowCredentials(true);
-//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", corsConfiguration);
-//        return source;
-//	}
+    //Ref: https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html#csrf-integration-javascript
+    static final class SpaCsrfTokenRequestHandler implements CsrfTokenRequestHandler {
+        private final CsrfTokenRequestHandler plain = new CsrfTokenRequestAttributeHandler();
+        private final CsrfTokenRequestHandler xor = new XorCsrfTokenRequestAttributeHandler();
+
+        @Override
+        public void handle(HttpServletRequest request, HttpServletResponse response, Supplier<CsrfToken> csrfToken) {
+            this.xor.handle(request, response, csrfToken);
+            csrfToken.get();
+        }
+
+        @Override
+        public String resolveCsrfTokenValue(HttpServletRequest request, CsrfToken csrfToken) {
+            String headerValue = request.getHeader(csrfToken.getHeaderName());
+            return (StringUtils.hasText(headerValue) ? this.plain : this.xor).resolveCsrfTokenValue(request, csrfToken);
+        }
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+    	CorsConfiguration corsConfiguration = new CorsConfiguration();
+        corsConfiguration.addAllowedOriginPattern("*");
+        corsConfiguration.addAllowedHeader("*");
+        corsConfiguration.addAllowedMethod("*");
+        corsConfiguration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfiguration);
+        return source;
+	}
 }

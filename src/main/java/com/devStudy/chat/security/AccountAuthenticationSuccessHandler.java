@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Cookie;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,8 +49,17 @@ public class AccountAuthenticationSuccessHandler implements AuthenticationSucces
 		User user = (User)authentication.getPrincipal();
 		result.put("UserInfo", DTOMapper.toUserDTO(user));
 		String jwtToken = jwtTokenService.generateJwtToken(user.getUsername(), TOKEN_FLAG_LOGIN);
-		result.put("LoginToken", jwtToken);
+		//result.put("LoginToken", jwtToken);
 		result.put("isAuthenticated", true);
+
+		//store jwt token in the cookie
+		Cookie cookie = new Cookie("JWT-Token", jwtToken);
+		cookie.setHttpOnly(true);
+		//cookie.setSecure(true);
+		cookie.setPath("/");
+		cookie.setMaxAge(86400); //1 day
+
+		response.addCookie(cookie);
 
 		String json = mapper.writeValueAsString(result);
         logger.info("json : {}", json);

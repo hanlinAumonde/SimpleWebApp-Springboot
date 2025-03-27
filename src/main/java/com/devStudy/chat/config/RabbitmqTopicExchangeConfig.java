@@ -4,7 +4,7 @@ import static com.devStudy.chat.service.utils.ConstantValues.RABBITMQ_QUEUE_Q1;
 import static com.devStudy.chat.service.utils.ConstantValues.RABBITMQ_QUEUE_Q2;
 import static com.devStudy.chat.service.utils.ConstantValues.RABBITMQ_EXCHANGE_NAME;
 import static com.devStudy.chat.service.utils.ConstantValues.ROUTING_KEY_RET_PASSWORD;
-import static com.devStudy.chat.service.utils.ConstantValues.ROUTING_KEY_VERIF_CODE;
+import static com.devStudy.chat.service.utils.ConstantValues.ROUTING_KEY_VERIFY_CODE;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
@@ -28,6 +28,6 @@ public class RabbitmqTopicExchangeConfig {
 
     @Bean
     Binding queueBinding2(){
-        return BindingBuilder.bind(queue2()).to(exchange()).with(ROUTING_KEY_VERIF_CODE);
+        return BindingBuilder.bind(queue2()).to(exchange()).with(ROUTING_KEY_VERIFY_CODE);
     }
 }

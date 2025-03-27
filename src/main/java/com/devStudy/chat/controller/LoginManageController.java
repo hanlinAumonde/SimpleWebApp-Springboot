@@ -1,6 +1,7 @@
 package com.devStudy.chat.controller;
 
 import com.devStudy.chat.service.implementations.BlackListService;
+import jakarta.servlet.http.Cookie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -41,9 +42,16 @@ public class LoginManageController {
      */
     @GetMapping("/check-login")
     public ResponseEntity<UserDTO> getLoggedUser(HttpServletRequest request){
-		final String authHeader = request.getHeader("Authorization");
-		if(authHeader != null && authHeader.startsWith("Bearer ")) {
-			final String token = authHeader.substring(7);
+		String token = null;
+		if(request.getCookies() != null){
+			for(Cookie cookie : request.getCookies()){
+				if(cookie.getName().equals("JWT-Token")){
+					token = cookie.getValue();
+					break;
+				}
+			}
+		}
+		if(token != null && !blackListService.isTokenInBlackList(token)){
 			final String email = jwtTokenService.validateTokenAndGetEmail(token);
 			if(email != null) {
 				UserDTO user = userService.getLoggedUser(email);
@@ -54,6 +62,7 @@ public class LoginManageController {
 				return ResponseEntity.ok(user);
 			}
 		}
+
 		return ResponseEntity.ok(new UserDTO());
     }
 
@@ -92,10 +101,19 @@ public class LoginManageController {
 
 	@PostMapping(value = "/logout")
 	public ResponseEntity<?> logout(HttpServletRequest request){
-		final String authHeader = request.getHeader("Authorization");
+		//final String authHeader = request.getHeader("Authorization");
+		String jwtToken = null;
+		if(request.getCookies() != null){
+			for(Cookie cookie : request.getCookies()){
+				if(cookie.getName().equals("JWT-Token")){
+					jwtToken = cookie.getValue();
+					break;
+				}
+			}
+		}
 		String resultMsg;
-		if(authHeader != null && authHeader.startsWith("Bearer ")) {
-			final String jwtToken = authHeader.substring(7);
+		if(jwtToken != null) {
+			//final String jwtToken = authHeader.substring(7);
 			if(jwtTokenService.validateToken(jwtToken))
 				blackListService.addTokenToBlackList(jwtToken, jwtTokenService.getExpirationDate(jwtToken).getTime());
 			resultMsg = "Logout successful";

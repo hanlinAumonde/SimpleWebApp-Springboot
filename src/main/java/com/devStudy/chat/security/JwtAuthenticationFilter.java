@@ -6,6 +6,7 @@ import com.devStudy.chat.service.implementations.JwtTokenService;
 import com.devStudy.chat.service.implementations.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -19,8 +20,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -29,8 +28,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenService jwtTokenService;
     private final UserService userService;
     private final BlackListService blackListService;
-
-    private static final Pattern TOKEN_PATTERN = Pattern.compile("token=([A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+)");
 
     @Autowired
     public JwtAuthenticationFilter(JwtTokenService jwtTokenService, UserService userService, BlackListService blackListService) {
@@ -43,17 +40,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        final String authHeader = request.getHeader("Authorization");
         String jwtToken = null;
-        if(authHeader != null && authHeader.startsWith("Bearer ")) {
-            jwtToken = authHeader.substring(7);
-        }else if(authHeader == null && request.getQueryString() != null) {
-            //Temporairement utiliser url paramètre pour obtenir le token
-            //TODO: changer le façon de passer le token
-            logger.info(request.getQueryString());
-            Matcher matcher = TOKEN_PATTERN.matcher(request.getQueryString());
-            if (matcher.matches()) {
-                jwtToken = matcher.group(1);
+        //Read token from cookie
+        if(request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if(cookie.getName().equals("JWT-Token")) {
+                    jwtToken = cookie.getValue();
+                    break;
+                }
             }
         }
 
