@@ -134,26 +134,26 @@ public class UserServiceTest {
         verify(userRepository).findByMailAndAdmin("test@example.com", false);
     }
     
-    @Test
-    void testGetLoggedUser() {
-        // 创建mock认证对象和安全上下文对象,以通过when来模拟其行为
-        Authentication authentication = mock(Authentication.class);
-        SecurityContext securityContext = mock(SecurityContext.class);
-        
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.getPrincipal()).thenReturn(testUser);
-        SecurityContextHolder.setContext(securityContext);
-        
-        UserDTO result = userService.getLoggedUser();
-        
-        assertNotNull(result);
-        assertEquals(1L, result.getId());
-        assertEquals("Test", result.getFirstName());
-        assertEquals("User", result.getLastName());
-        assertEquals("test@example.com", result.getMail());
-        verify(securityContext).getAuthentication();
-        verify(authentication).getPrincipal();
-    }
+//    @Test
+//    void testGetLoggedUser() {
+//        // 创建mock认证对象和安全上下文对象,以通过when来模拟其行为
+//        Authentication authentication = mock(Authentication.class);
+//        SecurityContext securityContext = mock(SecurityContext.class);
+//
+//        when(securityContext.getAuthentication()).thenReturn(authentication);
+//        when(authentication.getPrincipal()).thenReturn(testUser);
+//        SecurityContextHolder.setContext(securityContext);
+//
+//        UserDTO result = userService.getLoggedUser();
+//
+//        assertNotNull(result);
+//        assertEquals(1L, result.getId());
+//        assertEquals("Test", result.getFirstName());
+//        assertEquals("User", result.getLastName());
+//        assertEquals("test@example.com", result.getMail());
+//        verify(securityContext).getAuthentication();
+//        verify(authentication).getPrincipal();
+//    }
     
     //---------------------------------------------测试用户管理相关方法-----------------------------------------
     @Test
@@ -242,46 +242,6 @@ public class UserServiceTest {
         
         verify(userRepository).updateActive("test@example.com", false);
         verify(userRepository).updateFailedAttempts("test@example.com", 0);
-    }
-    
-    @Test
-    void testCheckUserLoginStatus_NotAuthenticated() {
-        SecurityContextHolder.clearContext();
-        assertFalse(userService.checkUserLoginStatus());
-    }
-
-    @Test
-    void testCheckUserLoginStatus_Authenticated() {
-        Authentication authentication = mock(Authentication.class);
-        SecurityContext securityContext = mock(SecurityContext.class);
-        
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getPrincipal()).thenReturn(testUser);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        
-        SecurityContextHolder.setContext(securityContext);
-        
-        assertTrue(userService.checkUserLoginStatus());
-        
-        SecurityContextHolder.clearContext();
-    }
-
-    @Test
-    void testCheckUserLoginStatus_UserNoLongerExists() {
-        Authentication authentication = mock(Authentication.class);
-        SecurityContext securityContext = mock(SecurityContext.class);
-        
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getPrincipal()).thenReturn(testUser);
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
-        
-        SecurityContextHolder.setContext(securityContext);
-        
-        assertFalse(userService.checkUserLoginStatus());
-        
-        SecurityContextHolder.clearContext();
     }
     
     //---------------------------------------------测试用户密码重置相关方法-----------------------------------------

@@ -26,6 +26,7 @@ public class AccountAuthenticationFailureHandler implements AuthenticationFailur
     	Map<String, Object> result = new HashMap<>();
         result.put("status", "error");
         result.put("msg", "Failed login : " + exception.getMessage());
+        result.put("isAuthenticated", false);
         
         response.getWriter().write(mapper.writeValueAsString(result));
     }

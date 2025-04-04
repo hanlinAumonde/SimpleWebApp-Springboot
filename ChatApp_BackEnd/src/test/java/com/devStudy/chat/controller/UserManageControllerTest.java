@@ -1,5 +1,6 @@
 package com.devStudy.chat.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -9,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +29,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.devStudy.chat.dto.ChatroomDTO;
 import com.devStudy.chat.dto.ChatroomWithOwnerAndStatusDTO;
-import com.devStudy.chat.dto.UserDTO;
 import com.devStudy.chat.service.implementations.ChatroomService;
 import com.devStudy.chat.service.implementations.UserService;
 
@@ -59,9 +60,7 @@ public class UserManageControllerTest {
 	
 	@BeforeEach
 	void TestSetup() {
-		UserDTO user = new UserDTO();
-        user.setId(1L);
-        when(userService.getLoggedUser()).thenReturn(user);
+		when(userService.getUserId(any(HttpServletRequest.class))).thenReturn(1L);
 	}
 	
 	@Test

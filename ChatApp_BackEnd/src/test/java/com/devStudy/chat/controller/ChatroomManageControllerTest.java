@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -74,9 +75,7 @@ public class ChatroomManageControllerTest {
 	
 	@BeforeEach
 	void TestSetup() {
-		UserDTO user = new UserDTO();
-        user.setId(1L);
-        when(userService.getLoggedUser()).thenReturn(user);
+		when(userService.getUserId(any(HttpServletRequest.class))).thenReturn(1L);
 	}
 	
 	@Test
